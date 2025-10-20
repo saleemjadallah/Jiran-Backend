@@ -182,7 +182,6 @@ async def _get_category_counts(session: AsyncSession, category: ProductCategory)
 @router.get("")
 async def get_all_categories(
     session: Annotated[AsyncSession, Depends(get_db)],
-    redis: Annotated[Redis, Depends(get_redis)],
 ):
     """Get all 12 categories with counts and metadata.
 
@@ -192,24 +191,15 @@ async def get_all_categories(
     - Active listings count
     - Category metadata (name, icon, colors)
 
-    Results are cached in Redis with 5-minute TTL.
+    Note: Redis caching removed for Railway compatibility.
 
     Args:
         session: Database session
-        redis: Redis client
 
     Returns:
         List of all categories with counts and metadata
     """
-    # Try to get from cache
-    cache_key = "categories:all"
-    cached = await redis.get(cache_key)
-    if cached:
-        import json
-
-        return {"success": True, "data": json.loads(cached)}
-
-    # Build category list
+    # Build category list (caching removed for Railway compatibility)
     categories = []
     for category_enum in ProductCategory:
         metadata = CATEGORY_METADATA[category_enum]
@@ -229,11 +219,6 @@ async def get_all_categories(
                 "badge_count": counts["live_streams_count"],  # Badge shows live count
             }
         )
-
-    # Cache for 5 minutes
-    import json
-
-    await redis.setex(cache_key, 300, json.dumps(categories))
 
     return {"success": True, "data": categories}
 
