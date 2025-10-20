@@ -13,7 +13,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.cache.redis_manager import RedisManager, get_redis_manager
-from app.core.database import get_db
+from app.dependencies import get_db
 from app.models.product import Product
 from app.models.user import User
 
