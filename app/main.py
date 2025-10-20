@@ -33,7 +33,8 @@ def create_app() -> FastAPI:
 
     @app.get("/health", tags=["Health"])
     async def health_check():
-        return {"status": "ok"}
+        from datetime import datetime
+        return {"status": "ok", "deployment_time": "2025-01-20T10:50:00Z", "current_time": datetime.utcnow().isoformat()}
 
     app.include_router(api_router, prefix="/api/v1")
     app.mount("/ws", socket_app)
