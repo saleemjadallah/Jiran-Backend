@@ -192,6 +192,7 @@ async def get_all_categories(
     - Category metadata (name, icon, colors)
 
     Note: Redis caching removed for Railway compatibility.
+    Counts default to 0 if database not yet initialized.
 
     Args:
         session: Database session
@@ -203,7 +204,17 @@ async def get_all_categories(
     categories = []
     for category_enum in ProductCategory:
         metadata = CATEGORY_METADATA[category_enum]
-        counts = await _get_category_counts(session, category_enum)
+
+        # Try to get counts, default to 0 if database not initialized
+        try:
+            counts = await _get_category_counts(session, category_enum)
+        except Exception:
+            # Database not initialized or tables don't exist
+            counts = {
+                "total_products": 0,
+                "live_streams_count": 0,
+                "active_listings_count": 0,
+            }
 
         categories.append(
             {
