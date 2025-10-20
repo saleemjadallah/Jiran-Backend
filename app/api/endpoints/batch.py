@@ -4,7 +4,7 @@ Prevents N+1 queries by allowing clients to fetch multiple items in a single req
 """
 
 import logging
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -235,7 +235,7 @@ async def get_products_batch(
 @router.get("/cache-stats")
 async def get_cache_stats(
     redis: RedisManager = Depends(get_redis_manager),
-) -> Dict[str, any]:
+) -> Dict[str, Any]:
     """Get cache statistics and health info.
 
     Returns:
