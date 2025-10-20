@@ -11,7 +11,7 @@ Endpoints:
 
 import secrets
 from datetime import datetime, timedelta
-from typing import Literal
+from typing import Literal, Optional
 from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, status
