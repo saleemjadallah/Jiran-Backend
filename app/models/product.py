@@ -141,6 +141,7 @@ class Product(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         "Transaction", back_populates="product", cascade="all, delete"
     )
     conversations: Mapped[list["Conversation"]] = relationship("Conversation", back_populates="product")
+    reviews: Mapped[list["Review"]] = relationship("Review", back_populates="product", cascade="all, delete")
 
     def __repr__(self) -> str:  # pragma: no cover - debug helper
         return f"<Product {self.id} {self.title} ({self.feed_type.value})>"

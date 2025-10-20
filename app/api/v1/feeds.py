@@ -13,11 +13,12 @@ from sqlalchemy import and_, cast, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.dependencies import get_current_active_user, get_db
+from app.dependencies import get_current_active_user, get_db, get_feed_cache_service
 from app.models.product import FeedType, Product, ProductCategory
 from app.models.stream import Stream, StreamStatus
 from app.models.user import User
 from app.schemas.product import ProductLocation, ProductResponse
+from app.services.cache.feed_cache_service import FeedCacheService
 from app.utils.geospatial import calculate_distance, get_distance_label
 
 router = APIRouter(prefix="/feeds", tags=["feeds"])
@@ -98,6 +99,7 @@ def _convert_product_to_feed_response(
 @router.get("/discover")
 async def get_discover_feed(
     session: Annotated[AsyncSession, Depends(get_db)],
+    feed_cache: Annotated[FeedCacheService, Depends(get_feed_cache_service)],
     current_user: Annotated[User | None, Depends(get_current_active_user)] = None,
     page: int = Query(1, ge=1, description="Page number"),
     per_page: int = Query(20, ge=1, le=100, description="Items per page"),
@@ -129,6 +131,22 @@ async def get_discover_feed(
     Returns:
         Paginated discover feed with items, pagination info
     """
+    # ========== Check Cache First ==========
+    category_str = category.value if category else None
+    cached_feed = await feed_cache.get_discover_feed(
+        page=page, per_page=per_page, category=category_str, sort=sort
+    )
+
+    if cached_feed:
+        # Cache hit - return immediately
+        return {
+            "success": True,
+            "data": cached_feed,
+            "cached": True,  # Debug flag
+        }
+
+    # ========== Cache Miss - Query Database ==========
+
     # Get user location
     requester_location = None
     if latitude and longitude:
@@ -200,21 +218,35 @@ async def get_discover_feed(
 
         items.append(item)
 
+    # ========== Build Response ==========
+    response_data = {
+        "items": items,
+        "page": page,
+        "per_page": per_page,
+        "total": total,
+        "has_more": (page * per_page) < total,
+    }
+
+    # ========== Cache Response (5 min TTL) ==========
+    await feed_cache.set_discover_feed(
+        page=page,
+        per_page=per_page,
+        data=response_data,
+        category=category_str,
+        sort=sort,
+    )
+
     return {
         "success": True,
-        "data": {
-            "items": items,
-            "page": page,
-            "per_page": per_page,
-            "total": total,
-            "has_more": (page * per_page) < total,
-        },
+        "data": response_data,
+        "cached": False,  # Debug flag
     }
 
 
 @router.get("/community")
 async def get_community_feed(
     session: Annotated[AsyncSession, Depends(get_db)],
+    feed_cache: Annotated[FeedCacheService, Depends(get_feed_cache_service)],
     current_user: Annotated[User | None, Depends(get_current_active_user)] = None,
     page: int = Query(1, ge=1),
     per_page: int = Query(20, ge=1, le=100),
@@ -255,6 +287,32 @@ async def get_community_feed(
     Returns:
         Paginated community feed with distance labels
     """
+    # ========== Check Cache First ==========
+    category_str = category.value if category else None
+    cached_feed = await feed_cache.get_community_feed(
+        page=page,
+        per_page=per_page,
+        latitude=latitude,
+        longitude=longitude,
+        radius_km=radius_km,
+        category=category_str,
+        neighborhood=neighborhood,
+        sort=sort,
+        min_price=min_price,
+        max_price=max_price,
+        condition=condition,
+    )
+
+    if cached_feed:
+        # Cache hit - return immediately
+        return {
+            "success": True,
+            "data": cached_feed,
+            "cached": True,  # Debug flag
+        }
+
+    # ========== Cache Miss - Query Database ==========
+
     requester_location = ProductLocation(latitude=latitude, longitude=longitude)
 
     # Convert km to meters
@@ -324,15 +382,35 @@ async def get_community_feed(
         item["distance_label"] = get_distance_label(distance_km)
         items.append(item)
 
+    # ========== Build Response ==========
+    response_data = {
+        "items": items,
+        "page": page,
+        "per_page": per_page,
+        "total": total,
+        "has_more": (page * per_page) < total,
+    }
+
+    # ========== Cache Response (5 min TTL) ==========
+    await feed_cache.set_community_feed(
+        page=page,
+        per_page=per_page,
+        data=response_data,
+        latitude=latitude,
+        longitude=longitude,
+        radius_km=radius_km,
+        category=category_str,
+        neighborhood=neighborhood,
+        sort=sort,
+        min_price=min_price,
+        max_price=max_price,
+        condition=condition,
+    )
+
     return {
         "success": True,
-        "data": {
-            "items": items,
-            "page": page,
-            "per_page": per_page,
-            "total": total,
-            "has_more": (page * per_page) < total,
-        },
+        "data": response_data,
+        "cached": False,  # Debug flag
     }
 
 

@@ -48,3 +48,9 @@ class Transaction(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     buyer: Mapped["User"] = relationship("User", foreign_keys=[buyer_id], back_populates="transactions_bought")
     seller: Mapped["User"] = relationship("User", foreign_keys=[seller_id], back_populates="transactions_sold")
     product: Mapped["Product | None"] = relationship("Product", back_populates="transactions")
+    review: Mapped["Review"] = relationship(
+        "Review",
+        back_populates="transaction",
+        cascade="all, delete-orphan",
+        uselist=False,
+    )

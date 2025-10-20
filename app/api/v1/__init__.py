@@ -2,6 +2,8 @@ from fastapi import APIRouter
 
 from app.api.v1 import (
     activities,
+    admin,
+    analytics,
     auth,
     categories,
     feeds,
@@ -21,6 +23,7 @@ from app.api.v1 import (
     verification,
     webhooks,
 )
+from app.api.endpoints import cache_monitoring
 
 api_router = APIRouter()
 api_router.include_router(health.router, tags=["Health"])
@@ -43,5 +46,10 @@ api_router.include_router(webhooks.router)
 api_router.include_router(social.router)
 api_router.include_router(notifications.router)
 api_router.include_router(activities.router)
+# Cache Monitoring (Phase 7)
+api_router.include_router(cache_monitoring.router)
+# Phase 8: Advanced Features
+api_router.include_router(analytics.router)
+api_router.include_router(admin.router)
 
 __all__ = ["api_router"]

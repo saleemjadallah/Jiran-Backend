@@ -167,6 +167,45 @@ class User(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         back_populates="user",
         cascade="all, delete-orphan",
     )
+    # Block relationships
+    blocking: Mapped[list["Block"]] = relationship(
+        "Block",
+        foreign_keys="Block.blocker_id",
+        back_populates="blocker",
+        cascade="all, delete-orphan",
+    )
+    blocked_by: Mapped[list["Block"]] = relationship(
+        "Block",
+        foreign_keys="Block.blocked_id",
+        back_populates="blocked",
+        cascade="all, delete-orphan",
+    )
+    # Report relationships
+    reports_filed: Mapped[list["Report"]] = relationship(
+        "Report",
+        foreign_keys="Report.reporter_id",
+        back_populates="reporter",
+        cascade="all, delete-orphan",
+    )
+    reports_against: Mapped[list["Report"]] = relationship(
+        "Report",
+        foreign_keys="Report.reported_user_id",
+        back_populates="reported_user",
+        cascade="all, delete",
+    )
+    # Review relationships
+    reviews_received: Mapped[list["Review"]] = relationship(
+        "Review",
+        foreign_keys="Review.seller_id",
+        back_populates="seller",
+        cascade="all, delete",
+    )
+    reviews_given: Mapped[list["Review"]] = relationship(
+        "Review",
+        foreign_keys="Review.reviewer_id",
+        back_populates="reviewer",
+        cascade="all, delete-orphan",
+    )
 
     def __repr__(self) -> str:  # pragma: no cover - debug helper
         return f"<User {self.id} {self.email}>"

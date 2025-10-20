@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     ASYNC_DATABASE_URL: AnyUrl | None = None
 
     REDIS_URL: AnyUrl = Field(default="redis://localhost:6379/0")
+    ELASTICSEARCH_URL: str = "http://localhost:9200"
 
     SECRET_KEY: str = Field(min_length=32, description="Secret key for JWT tokens - MUST be set in environment")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15

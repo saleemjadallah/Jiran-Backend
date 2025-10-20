@@ -25,7 +25,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.redis import get_redis
-from app.dependencies import get_current_active_user, get_db
+from app.dependencies import (
+    get_current_active_user,
+    get_db,
+    get_feed_cache_service,
+    get_redis_manager,
+)
 from app.models.product import Product
 from app.models.stream import Stream, StreamStatus
 from app.models.stream_product import StreamProduct
@@ -40,6 +45,7 @@ from app.schemas.stream import (
     StreamUpdate,
     StreamViewer,
 )
+from app.services.cache.feed_cache_service import FeedCacheService
 
 router = APIRouter(prefix="/streams", tags=["streams"])
 
@@ -288,6 +294,7 @@ async def go_live(
     go_live_data: GoLiveRequest,
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
+    feed_cache: FeedCacheService = Depends(get_feed_cache_service),
 ):
     """
     Start live streaming (Step 5: After Countdown)
@@ -331,6 +338,10 @@ async def go_live(
     stream.viewer_count = 0
 
     await db.commit()
+
+    # ========== Invalidate Feed Caches ==========
+    # Stream is now LIVE - all feeds need to refresh to show updated live badge
+    await feed_cache.invalidate_all_feeds()
 
     # Send notifications based on audience setting
     notifications_sent = 0
@@ -380,6 +391,7 @@ async def end_stream(
     stream_id: UUID,
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
+    feed_cache: FeedCacheService = Depends(get_feed_cache_service),
 ):
     """End live stream and generate analytics"""
     # Get stream
@@ -428,6 +440,10 @@ async def end_stream(
         stream.vod_url = f"https://video.soukloop.com/vods/{stream_id}.m3u8"
 
     await db.commit()
+
+    # ========== Invalidate Feed Caches ==========
+    # Stream has ended - all feeds need to refresh to remove live badge
+    await feed_cache.invalidate_all_feeds()
 
     # Emit WebSocket event
     # TODO: await manager.send_to_conversation(str(stream_id), 'stream:ended', {})
