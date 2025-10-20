@@ -23,7 +23,7 @@ class Settings(BaseSettings):
 
     REDIS_URL: AnyUrl = Field(default="redis://localhost:6379/0")
 
-    SECRET_KEY: str = Field(default="change-me", min_length=32)
+    SECRET_KEY: str = Field(min_length=32, description="Secret key for JWT tokens - MUST be set in environment")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     JWT_ALGORITHM: str = "HS256"
