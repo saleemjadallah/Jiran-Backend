@@ -14,9 +14,10 @@ from app.websocket.server import socket_app
 async def lifespan(app: FastAPI):
     configure_logging(app.debug)
 
-    # Start background jobs
-    from app.services.background_jobs import start_background_jobs
-    await start_background_jobs()
+    # Start background jobs (disabled for initial deployment)
+    # Uncomment when database is ready
+    # from app.services.background_jobs import start_background_jobs
+    # await start_background_jobs()
 
     yield
 
