@@ -1,0 +1,565 @@
+{
+  "info": {
+    "name": "Souk Loop API Tests",
+    "description": "Comprehensive API testing collection for Souk Loop backend (Phases 1-4)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{buyer_access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "buyer_email",
+      "value": "testbuyer@soukloop.com",
+      "type": "string"
+    },
+    {
+      "key": "buyer_password",
+      "value": "Test123!@#",
+      "type": "string"
+    },
+    {
+      "key": "seller_email",
+      "value": "testseller@soukloop.com",
+      "type": "string"
+    },
+    {
+      "key": "seller_password",
+      "value": "Seller123!@#",
+      "type": "string"
+    },
+    {
+      "key": "buyer_access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "seller_access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "product_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "conversation_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "stream_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Phase 1: Authentication",
+      "item": [
+        {
+          "name": "Register Buyer",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const data = pm.response.json().data;",
+                  "    pm.environment.set('buyer_access_token', data.access_token);",
+                  "    pm.environment.set('buyer_user_id', data.user.id);",
+                  "    pm.test('Buyer registered successfully', () => {",
+                  "        pm.expect(data.access_token).to.be.a('string');",
+                  "        pm.expect(data.user.role).to.eql('buyer');",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{buyer_email}}\",\n  \"username\": \"testbuyer\",\n  \"password\": \"{{buyer_password}}\",\n  \"phone\": \"+971501234567\",\n  \"full_name\": \"Test Buyer\",\n  \"role\": \"buyer\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Register Seller",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const data = pm.response.json().data;",
+                  "    pm.environment.set('seller_access_token', data.access_token);",
+                  "    pm.environment.set('seller_user_id', data.user.id);",
+                  "    pm.test('Seller registered successfully', () => {",
+                  "        pm.expect(data.access_token).to.be.a('string');",
+                  "        pm.expect(data.user.role).to.eql('seller');",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{seller_email}}\",\n  \"username\": \"testseller\",\n  \"password\": \"{{seller_password}}\",\n  \"phone\": \"+971507654321\",\n  \"full_name\": \"Test Seller\",\n  \"role\": \"seller\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Login Buyer",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json().data;",
+                  "pm.environment.set('buyer_access_token', data.access_token);",
+                  "pm.test('Login successful', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "    pm.expect(data.access_token).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"{{buyer_email}}\",\n  \"password\": \"{{buyer_password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{buyer_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "me"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Phase 2: Products & Feeds",
+      "item": [
+        {
+          "name": "Get Categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/categories",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "categories"]
+            }
+          }
+        },
+        {
+          "name": "Create Product (Community)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const data = pm.response.json().data;",
+                  "    pm.environment.set('product_id', data.id);",
+                  "    pm.test('Product created', () => {",
+                  "        pm.expect(data.feed_type).to.eql('community');",
+                  "        pm.expect(data.platform_fee).to.be.a('number');",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{seller_access_token}}"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Nike Air Jordan 1 Retro High\",\n  \"description\": \"Brand new, never worn. Size 42. Original box included.\",\n  \"price\": 850.00,\n  \"currency\": \"AED\",\n  \"category\": \"sneakers\",\n  \"condition\": \"new\",\n  \"feed_type\": \"community\",\n  \"location\": {\n    \"latitude\": 25.0772,\n    \"longitude\": 55.1369\n  },\n  \"neighborhood\": \"Dubai Marina\",\n  \"image_urls\": [\n    \"https://example.com/image1.jpg\",\n    \"https://example.com/image2.jpg\"\n  ],\n  \"tags\": [\"sneakers\", \"jordan\", \"nike\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/products",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "products"]
+            }
+          }
+        },
+        {
+          "name": "Browse Community Feed",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/feeds/community?latitude=25.0772&longitude=55.1369&radius_km=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "feeds", "community"],
+              "query": [
+                {
+                  "key": "latitude",
+                  "value": "25.0772"
+                },
+                {
+                  "key": "longitude",
+                  "value": "55.1369"
+                },
+                {
+                  "key": "radius_km",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Browse Discover Feed",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/feeds/discover?page=1&per_page=20",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "feeds", "discover"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "per_page",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Search Products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/search?q=nike jordan",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "nike jordan"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Phase 3: Messaging & Offers",
+      "item": [
+        {
+          "name": "Create Conversation",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const data = pm.response.json().data;",
+                  "    pm.environment.set('conversation_id', data.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{buyer_access_token}}"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"other_user_id\": \"{{seller_user_id}}\",\n  \"product_id\": \"{{product_id}}\",\n  \"initial_message\": \"Hi! Is this item still available?\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/conversations",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "conversations"]
+            }
+          }
+        },
+        {
+          "name": "Send Message",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{seller_access_token}}"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message_type\": \"text\",\n  \"content\": \"Yes! It's available. Would you like to see more photos?\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/conversations/{{conversation_id}}/messages",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "conversations", "{{conversation_id}}", "messages"]
+            }
+          }
+        },
+        {
+          "name": "Create Offer",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{buyer_access_token}}"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"product_id\": \"{{product_id}}\",\n  \"offered_price\": 750.00,\n  \"message\": \"Would you accept 750 AED? I can pick up today.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/offers",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "offers"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Phase 4: Live Streaming",
+      "item": [
+        {
+          "name": "Create Stream",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const data = pm.response.json().data;",
+                  "    pm.environment.set('stream_id', data.streamId);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{seller_access_token}}"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Flash Sale - Up to 50% Off Sneakers!\",\n  \"description\": \"Live shopping event with exclusive deals\",\n  \"category\": \"sneakers\",\n  \"audience\": \"everyone\",\n  \"estimated_duration\": 30,\n  \"notify_followers\": true,\n  \"notify_neighborhood\": true,\n  \"enable_chat\": true,\n  \"enable_comments\": true,\n  \"record_stream\": true,\n  \"product_ids\": [\"{{product_id}}\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/streams",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "streams"]
+            }
+          }
+        },
+        {
+          "name": "Update Stream Settings",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{seller_access_token}}"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"audience\": \"followers\",\n  \"estimated_duration\": 45\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/streams/{{stream_id}}/settings",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "streams", "{{stream_id}}", "settings"]
+            }
+          }
+        },
+        {
+          "name": "Go Live",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{seller_access_token}}"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"camera_ready\": true,\n  \"checklist_complete\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/streams/{{stream_id}}/go-live",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "streams", "{{stream_id}}", "go-live"]
+            }
+          }
+        },
+        {
+          "name": "Get Stream Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/streams/{{stream_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "streams", "{{stream_id}}"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

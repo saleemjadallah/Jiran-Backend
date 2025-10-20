@@ -1,0 +1,43 @@
+version: "3.10"
+
+services:
+  postgres:
+    image: postgis/postgis:15-3.3
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DATABASE_USER:-soukloop}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-soukloop}
+      POSTGRES_DB: ${DATABASE_NAME:-soukloop}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+  app:
+    build: .
+    restart: unless-stopped
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - .:/app
+    environment:
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_USER: ${DATABASE_USER:-soukloop}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-soukloop}
+      DATABASE_NAME: ${DATABASE_NAME:-soukloop}
+      REDIS_URL: redis://redis:6379/0
+      DEBUG: "true"
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+      - redis
+
+volumes:
+  postgres_data:
