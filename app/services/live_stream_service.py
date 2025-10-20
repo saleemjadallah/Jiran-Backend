@@ -34,7 +34,7 @@ from typing import Optional, Dict, List
 from fastapi import HTTPException
 from datetime import datetime
 
-from app.config.b2_config import B2Config
+from app.storage.b2_config import B2Config
 
 
 class LiveStreamService:

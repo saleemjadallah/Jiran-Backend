@@ -18,7 +18,7 @@ from datetime import datetime
 from typing import Dict, Optional
 from fastapi import UploadFile, HTTPException
 
-from app.config.b2_config import B2Config
+from app.storage.b2_config import B2Config
 
 
 class VideoService:
