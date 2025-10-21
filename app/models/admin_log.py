@@ -2,7 +2,7 @@
 
 from datetime import datetime
 from typing import Optional
-from sqlalchemy import String, Text, JSON
+from sqlalchemy import String, Text, JSON, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 
@@ -21,6 +21,7 @@ class AdminLog(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     # Admin who performed the action
     admin_user_id: Mapped[PG_UUID] = mapped_column(
         PG_UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
         index=True
     )
