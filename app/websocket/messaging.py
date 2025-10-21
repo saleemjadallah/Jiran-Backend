@@ -120,7 +120,7 @@ async def disconnect(sid):
 # ============================================================================
 
 
-@sio.event('conversation:join')
+@sio.on('conversation:join')
 async def conversation_join(sid, data: dict):
     """
     Join a conversation room.
@@ -218,7 +218,7 @@ async def conversation_join(sid, data: dict):
         await sio.emit("error", {"message": str(e)}, room=sid)
 
 
-@sio.event('conversation:leave')
+@sio.on('conversation:leave')
 async def conversation_leave(sid, data: dict):
     """
     Leave a conversation room.
@@ -247,7 +247,7 @@ async def conversation_leave(sid, data: dict):
 # ============================================================================
 
 
-@sio.event('message:send')
+@sio.on('message:send')
 async def message_send(sid, data: dict):
     """
     Send a message in a conversation.
@@ -385,7 +385,7 @@ async def message_send(sid, data: dict):
 # ============================================================================
 
 
-@sio.event('typing:start')
+@sio.on('typing:start')
 async def typing_start(sid, data: dict):
     """
     User started typing.
@@ -430,7 +430,7 @@ async def typing_start(sid, data: dict):
         logger.error(f"Error handling typing start: {e}")
 
 
-@sio.event('typing:stop')
+@sio.on('typing:stop')
 async def typing_stop(sid, data: dict):
     """
     User stopped typing.
@@ -480,7 +480,7 @@ async def typing_stop(sid, data: dict):
 # ============================================================================
 
 
-@sio.event('message:read')
+@sio.on('message:read')
 async def message_read(sid, data: dict):
     """
     Mark message as read.
@@ -542,7 +542,7 @@ async def message_read(sid, data: dict):
 # ============================================================================
 
 
-@sio.event('heartbeat')
+@sio.on('heartbeat')
 async def heartbeat(sid, data: dict):
     """
     Client heartbeat ping.

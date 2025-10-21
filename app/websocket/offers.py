@@ -58,7 +58,7 @@ async def _get_redis():
 # ============================================================================
 
 
-@sio.event('offer:create')
+@sio.on('offer:create')
 async def offer_create(sid, data: dict):
     """
     Create offer in real-time (from live stream or video).
@@ -252,7 +252,7 @@ async def offer_create(sid, data: dict):
 # ============================================================================
 
 
-@sio.event('offer:respond')
+@sio.on('offer:respond')
 async def offer_respond(sid, data: dict):
     """
     Respond to an offer (accept/decline/counter).
@@ -399,7 +399,7 @@ async def offer_respond(sid, data: dict):
 # ============================================================================
 
 
-@sio.event('offer:feed:subscribe')
+@sio.on('offer:feed:subscribe')
 async def offer_feed_subscribe(sid, data: dict):
     """
     Subscribe to product offer feed.
@@ -442,7 +442,7 @@ async def offer_feed_subscribe(sid, data: dict):
         logger.error(f"Error subscribing to offer feed: {e}")
 
 
-@sio.event('offer:feed:unsubscribe')
+@sio.on('offer:feed:unsubscribe')
 async def offer_feed_unsubscribe(sid, data: dict):
     """
     Unsubscribe from product offer feed.
