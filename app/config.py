@@ -32,7 +32,16 @@ class Settings(BaseSettings):
     SENTRY_DSN: str | None = None
     LOG_LEVEL: str = "INFO"
 
-    CORS_ALLOWED_ORIGINS: list[str] = Field(default_factory=lambda: ["http://localhost:3000"])
+    # CORS origins for development only (mobile apps bypass CORS)
+    # iOS/Android native apps don't need CORS - this is only for local Flutter web development
+    CORS_ALLOWED_ORIGINS: list[str] = Field(
+        default_factory=lambda: [
+            "http://localhost:3000",
+            "http://localhost:8080",
+            "http://127.0.0.1:3000",
+            "http://127.0.0.1:8080",
+        ]
+    )
 
     AWS_ACCESS_KEY_ID: str | None = None
     AWS_SECRET_ACCESS_KEY: str | None = None

@@ -48,7 +48,7 @@ async def _get_redis():
 # ============================================================================
 
 
-@sio.event
+@sio.event('stream:join')
 async def stream_join(sid, data: dict):
     """
     Join stream room
@@ -134,7 +134,7 @@ async def stream_join(sid, data: dict):
         await sio.emit("error", {"message": str(e)}, room=sid)
 
 
-@sio.event
+@sio.event('stream:leave')
 async def stream_leave(sid, data: dict):
     """Leave stream room"""
     if manager is None:
@@ -188,7 +188,7 @@ async def stream_leave(sid, data: dict):
 # ============================================================================
 
 
-@sio.event
+@sio.event('stream:chat')
 async def stream_chat(sid, data: dict):
     """
     Send chat message in stream
@@ -269,7 +269,7 @@ async def stream_chat(sid, data: dict):
 # ============================================================================
 
 
-@sio.event
+@sio.event('stream:reaction')
 async def stream_reaction(sid, data: dict):
     """
     Send reaction in stream
@@ -321,7 +321,7 @@ async def stream_reaction(sid, data: dict):
 # ============================================================================
 
 
-@sio.event
+@sio.event('stream:prepare')
 async def stream_prepare(sid, data: dict):
     """
     Prepare stream (during countdown)

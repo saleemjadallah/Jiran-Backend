@@ -120,7 +120,7 @@ async def disconnect(sid):
 # ============================================================================
 
 
-@sio.event
+@sio.event('conversation:join')
 async def conversation_join(sid, data: dict):
     """
     Join a conversation room.
@@ -218,7 +218,7 @@ async def conversation_join(sid, data: dict):
         await sio.emit("error", {"message": str(e)}, room=sid)
 
 
-@sio.event
+@sio.event('conversation:leave')
 async def conversation_leave(sid, data: dict):
     """
     Leave a conversation room.
@@ -247,7 +247,7 @@ async def conversation_leave(sid, data: dict):
 # ============================================================================
 
 
-@sio.event
+@sio.event('message:send')
 async def message_send(sid, data: dict):
     """
     Send a message in a conversation.
@@ -276,7 +276,8 @@ async def message_send(sid, data: dict):
 
     try:
         conversation_id = data.get("conversation_id")
-        message_type = data.get("message_type", "text")
+        # Accept both 'message_type' (backend convention) and 'type' (frontend sends)
+        message_type = data.get("message_type") or data.get("type", "text")
         content = data.get("content")
         image_urls = data.get("image_urls")
         offer_data = data.get("offer_data")
@@ -343,7 +344,7 @@ async def message_send(sid, data: dict):
 
         await manager.send_to_conversation(
             conversation_id,
-            "message:new",
+            "message:received",
             message_data,
             skip_sid=sid,  # Don't send back to sender
         )
@@ -351,7 +352,7 @@ async def message_send(sid, data: dict):
         # Send to recipient directly
         await manager.send_to_user(
             recipient_id,
-            "message:new",
+            "message:received",
             message_data,
         )
 
@@ -384,7 +385,7 @@ async def message_send(sid, data: dict):
 # ============================================================================
 
 
-@sio.event
+@sio.event('typing:start')
 async def typing_start(sid, data: dict):
     """
     User started typing.
@@ -419,6 +420,7 @@ async def typing_start(sid, data: dict):
             {
                 "conversation_id": conversation_id,
                 "user_id": user_id,
+                "isTyping": True,
                 "timestamp": datetime.utcnow().isoformat(),
             },
             skip_sid=sid,
@@ -428,7 +430,7 @@ async def typing_start(sid, data: dict):
         logger.error(f"Error handling typing start: {e}")
 
 
-@sio.event
+@sio.event('typing:stop')
 async def typing_stop(sid, data: dict):
     """
     User stopped typing.
@@ -463,6 +465,7 @@ async def typing_stop(sid, data: dict):
             {
                 "conversation_id": conversation_id,
                 "user_id": user_id,
+                "isTyping": False,
                 "timestamp": datetime.utcnow().isoformat(),
             },
             skip_sid=sid,
@@ -477,7 +480,7 @@ async def typing_stop(sid, data: dict):
 # ============================================================================
 
 
-@sio.event
+@sio.event('message:read')
 async def message_read(sid, data: dict):
     """
     Mark message as read.
@@ -539,7 +542,7 @@ async def message_read(sid, data: dict):
 # ============================================================================
 
 
-@sio.event
+@sio.event('heartbeat')
 async def heartbeat(sid, data: dict):
     """
     Client heartbeat ping.
