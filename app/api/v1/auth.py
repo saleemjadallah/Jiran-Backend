@@ -116,15 +116,15 @@ async def register_user(
     await session.refresh(user)
 
     otp = generate_otp()
-    identifier = payload.phone or payload.email
+    # Always use email for OTP (SMS integration pending)
+    identifier = payload.email
     try:
         await store_otp(identifier, otp, redis)
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail=str(exc)) from exc
-    if payload.phone:
-        await send_otp_sms(payload.phone, otp)
-    else:
-        await send_otp_email(payload.email, otp, payload.full_name)
+
+    # Send OTP via email (SMS integration will be added later)
+    await send_otp_email(payload.email, otp, payload.full_name)
 
     access_token = create_access_token({"sub": str(user.id), "role": user.role.value})
     refresh_token = create_refresh_token(str(user.id), user.role.value)
