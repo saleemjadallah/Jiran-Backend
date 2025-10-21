@@ -66,6 +66,15 @@ class CacheKeys:
         return f"token:refresh:{token}"
 
     @staticmethod
+    def blacklisted_token(token: str) -> str:
+        """Blacklisted access token key.
+
+        TTL: Remaining token expiry time (max 15 minutes)
+        Type: String ("revoked")
+        """
+        return f"token:blacklist:{token}"
+
+    @staticmethod
     def rate_limit(user_id: str, endpoint: str) -> str:
         """Rate limiting counter key.
 

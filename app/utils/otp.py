@@ -4,6 +4,8 @@ from datetime import timedelta
 
 from redis.asyncio import Redis
 
+from app.services.email_service import email_service
+
 OTP_TTL_SECONDS = 600
 OTP_RATE_LIMIT = 3
 OTP_RATE_LIMIT_WINDOW = timedelta(hours=1)
@@ -23,10 +25,28 @@ def _otp_key(identifier: str) -> str:
     return f"otp:{identifier}"
 
 
-async def send_otp_email(email: str, otp: str) -> bool:
-    # Placeholder for integration with actual email provider (e.g., SES, Mailgun)
-    logger.info("Sending OTP email", extra={"email": email, "otp": otp})
-    return True
+async def send_otp_email(email: str, otp: str, user_name: str | None = None) -> bool:
+    """
+    Send OTP verification email to user.
+
+    Args:
+        email: User's email address
+        otp: 6-digit OTP code
+        user_name: User's name for personalization (optional)
+
+    Returns:
+        True if email sent successfully, False otherwise
+    """
+    try:
+        result = await email_service.send_otp_email(email, otp, user_name)
+        if result:
+            logger.info("OTP email sent successfully", extra={"email": email})
+        else:
+            logger.error("Failed to send OTP email", extra={"email": email})
+        return result
+    except Exception as e:
+        logger.error(f"Error sending OTP email: {e}", extra={"email": email, "error": str(e)})
+        return False
 
 
 async def send_otp_sms(phone: str, otp: str) -> bool:

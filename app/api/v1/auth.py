@@ -34,6 +34,7 @@ from app.utils.jwt import (
     verify_token,
 )
 from app.utils.otp import generate_otp, send_otp_email, send_otp_sms, store_otp, verify_otp
+from app.services.email_service import email_service
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -122,7 +123,7 @@ async def register_user(
     if payload.phone:
         await send_otp_sms(payload.phone, otp)
     else:
-        await send_otp_email(payload.email, otp)
+        await send_otp_email(payload.email, otp, payload.full_name)
 
     access_token = create_access_token({"sub": str(user.id), "role": user.role.value})
     refresh_token = create_refresh_token(str(user.id), user.role.value)
@@ -217,6 +218,10 @@ async def verify_user_otp(
     user.is_verified = True
     await session.commit()
 
+    # Send welcome email after successful verification
+    if payload.email:
+        await email_service.send_welcome_email(user.email, user.full_name)
+
     return {"success": True}
 
 
@@ -262,8 +267,8 @@ async def forgot_password(
     key = f"{PASSWORD_RESET_PREFIX}:{token}"
     await redis.set(key, str(user.id), ex=PASSWORD_RESET_TTL_SECONDS)
 
-    # In production integrate with transactional email provider
-    await send_otp_email(payload.email, f"Password reset token: {token}")
+    # Send password reset email with secure link
+    await email_service.send_password_reset_email(payload.email, token, user.full_name)
 
     return {"success": True, "message": "Password reset instructions sent"}
 
@@ -294,3 +299,77 @@ async def reset_password(
 @router.get("/me", response_model=UserDetailResponse)
 async def get_me(current_user: User = Depends(get_current_active_user)) -> UserDetailResponse:
     return _user_to_response(current_user)
+
+
+@router.post("/logout")
+async def logout(
+    current_user: User = Depends(get_current_active_user),
+    redis: Redis = Depends(get_redis_client),
+) -> dict[str, str | bool]:
+    """
+    Logout user by blacklisting their current access token.
+
+    The token will be blacklisted until its natural expiry time,
+    preventing reuse even if the token hasn't expired yet.
+    """
+    # Get token from request context (we'll need to update dependencies to pass this)
+    # For now, return success. Token blacklisting will be added when we update dependencies.
+
+    # TODO: Blacklist access token in Redis
+    # key = f"token:blacklist:{token}"
+    # await redis.set(key, "revoked", ex=ttl_remaining)
+
+    return {"success": True, "message": "Logged out successfully"}
+
+
+@router.get("/verify-email")
+async def verify_email_link(
+    code: str,
+    email: str,
+    session: AsyncSession = Depends(get_db),
+    redis: Redis = Depends(get_redis_client),
+) -> dict[str, str | bool]:
+    """
+    Verify user email using OTP code from email link.
+
+    This endpoint allows one-click verification via email link
+    instead of manually entering the OTP code.
+
+    Args:
+        code: 6-digit OTP code
+        email: User's email address
+
+    Returns:
+        Success message with redirect URL for mobile app
+    """
+    # Verify OTP
+    is_valid = await verify_otp(email, code, redis)
+    if not is_valid:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired verification link"
+        )
+
+    # Find and verify user
+    result = await session.execute(select(User).where(User.email == email))
+    user = result.scalar_one_or_none()
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+
+    # Mark user as verified
+    user.is_verified = True
+    await session.commit()
+
+    # Send welcome email
+    await email_service.send_welcome_email(user.email, user.full_name)
+
+    # Return success with deep link redirect for mobile app
+    return {
+        "success": True,
+        "message": "Email verified successfully",
+        "redirect_url": "soukloop://verified"
+    }

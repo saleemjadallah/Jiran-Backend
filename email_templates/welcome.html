@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Jiran - Get Started!</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #FFF8F0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+        .header {
+            background: linear-gradient(135deg, #C1440E 0%, #E87A3E 40%, #D4A745 100%);
+            padding: 50px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image:
+                radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.08) 0%, transparent 50%);
+            pointer-events: none;
+        }
+        .logo {
+            font-size: 36px;
+            font-weight: 700;
+            color: white;
+            letter-spacing: -0.5px;
+            position: relative;
+            z-index: 1;
+        }
+        .tagline {
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 16px;
+            margin-top: 12px;
+            position: relative;
+            z-index: 1;
+        }
+        .hero-emoji {
+            font-size: 64px;
+            margin: 20px 0;
+            position: relative;
+            z-index: 1;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .greeting {
+            font-size: 26px;
+            color: #2C1810;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        .intro-text {
+            font-size: 16px;
+            color: #2C1810;
+            margin-bottom: 32px;
+            line-height: 1.7;
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            margin: 32px 0;
+        }
+        .feature-card {
+            background: linear-gradient(135deg, rgba(193, 68, 14, 0.03) 0%, rgba(232, 122, 62, 0.03) 100%);
+            border: 1.5px solid rgba(193, 68, 14, 0.15);
+            border-radius: 12px;
+            padding: 24px;
+            transition: all 0.3s ease;
+        }
+        .feature-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(193, 68, 14, 0.1);
+        }
+        .feature-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+        .feature-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #C1440E;
+            margin-bottom: 8px;
+        }
+        .feature-description {
+            font-size: 14px;
+            color: #2C1810;
+            line-height: 1.6;
+        }
+        .cta-section {
+            background: linear-gradient(135deg, #2D6A4F 0%, #52B788 100%);
+            border-radius: 12px;
+            padding: 32px;
+            text-align: center;
+            margin: 32px 0;
+            color: white;
+        }
+        .cta-title {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        .cta-subtitle {
+            font-size: 15px;
+            opacity: 0.95;
+            margin-bottom: 24px;
+        }
+        .button-group {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .btn-primary {
+            display: inline-block;
+            background: white;
+            color: #2D6A4F;
+            padding: 14px 32px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transition: all 0.2s;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+        }
+        .btn-secondary {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 14px 32px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 15px;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            transition: all 0.2s;
+        }
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.6);
+        }
+        .tips-section {
+            background: #FFF8F0;
+            border-radius: 12px;
+            padding: 24px;
+            margin: 32px 0;
+        }
+        .tips-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2C1810;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .tip-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 12px;
+            font-size: 14px;
+            color: #2C1810;
+        }
+        .tip-number {
+            background: linear-gradient(135deg, #D4A745 0%, #F4B942 100%);
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+        .stats-banner {
+            background: linear-gradient(135deg, #2C5F8D 0%, #4A6FA5 100%);
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            color: white;
+            margin: 32px 0;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .stat-item {
+            padding: 12px;
+        }
+        .stat-number {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+        .footer {
+            background: #FFF8F0;
+            padding: 32px 30px;
+            text-align: center;
+            border-top: 1px solid rgba(139, 115, 85, 0.1);
+        }
+        .footer-text {
+            font-size: 13px;
+            color: #8B7355;
+            margin-bottom: 16px;
+            line-height: 1.6;
+        }
+        .social-links {
+            margin: 20px 0;
+        }
+        .social-link {
+            display: inline-block;
+            margin: 0 8px;
+            color: #2C5F8D;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .divider {
+            height: 1px;
+            background: rgba(139, 115, 85, 0.2);
+            margin: 24px 0;
+        }
+        .app-download {
+            margin: 24px 0;
+        }
+        .app-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 16px;
+        }
+        .app-button {
+            display: inline-block;
+        }
+        .app-button img {
+            height: 44px;
+            border-radius: 8px;
+        }
+        @media only screen and (max-width: 600px) {
+            .container {
+                border-radius: 0;
+            }
+            .content {
+                padding: 30px 20px;
+            }
+            .header {
+                padding: 40px 20px;
+            }
+            .greeting {
+                font-size: 22px;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            .button-group {
+                flex-direction: column;
+            }
+            .btn-primary, .btn-secondary {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">Jiran</div>
+            <div class="tagline">Your Neighborhood Marketplace</div>
+            <div class="hero-emoji">🎉</div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <h1 class="greeting">Welcome to Jiran, {{USER_NAME}}!</h1>
+
+            <p class="intro-text">
+                You're now part of a vibrant community where neighbors buy, sell, and connect.
+                Whether you're looking for a great deal on furniture, selling handmade crafts, or
+                discovering unique finds from local sellers, Jiran is your go-to marketplace.
+            </p>
+
+            <!-- Feature Cards -->
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🏘️</div>
+                    <div class="feature-title">Shop Locally</div>
+                    <div class="feature-description">
+                        Browse products from verified sellers in your building and neighborhood.
+                        Save on delivery and support your local community.
+                    </div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">📱</div>
+                    <div class="feature-title">Live Shopping</div>
+                    <div class="feature-description">
+                        Watch live streams from sellers showcasing their products in real-time.
+                        Ask questions, make offers, and shop with confidence.
+                    </div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">💬</div>
+                    <div class="feature-title">Direct Messaging</div>
+                    <div class="feature-description">
+                        Chat directly with sellers to negotiate prices, ask about product details,
+                        and arrange convenient pickup times.
+                    </div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">✅</div>
+                    <div class="feature-title">Verified Sellers</div>
+                    <div class="feature-description">
+                        Shop from trusted, identity-verified sellers in your community.
+                        Every transaction is protected by our secure payment system.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Banner -->
+            <div class="stats-banner">
+                <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">Join Our Growing Community</div>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-number">50K+</div>
+                        <div class="stat-label">Active Users</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">200K+</div>
+                        <div class="stat-label">Products Listed</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">98%</div>
+                        <div class="stat-label">Satisfaction Rate</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CTA Section -->
+            <div class="cta-section">
+                <div class="cta-title">Ready to Get Started?</div>
+                <div class="cta-subtitle">Explore thousands of products from your neighbors today</div>
+                <div class="button-group">
+                    <a href="{{APP_LINK}}" class="btn-primary">Open Jiran App</a>
+                    <a href="{{BROWSE_LINK}}" class="btn-secondary">Browse Products</a>
+                </div>
+            </div>
+
+            <!-- Tips Section -->
+            <div class="tips-section">
+                <div class="tips-title">
+                    💡 Quick Start Tips
+                </div>
+                <div class="tip-item">
+                    <div class="tip-number">1</div>
+                    <div>
+                        <strong>Complete your profile:</strong> Add a profile picture and verify your identity
+                        to build trust with other users.
+                    </div>
+                </div>
+                <div class="tip-item">
+                    <div class="tip-number">2</div>
+                    <div>
+                        <strong>Set your location:</strong> Enable location services to see products from
+                        sellers nearby and get accurate distance estimates.
+                    </div>
+                </div>
+                <div class="tip-item">
+                    <div class="tip-number">3</div>
+                    <div>
+                        <strong>Browse categories:</strong> Explore 12 curated categories from Trading Cards
+                        to Kitchen Appliances to find exactly what you need.
+                    </div>
+                </div>
+                <div class="tip-item">
+                    <div class="tip-number">4</div>
+                    <div>
+                        <strong>Join live streams:</strong> Watch sellers showcase products in real-time
+                        and grab exclusive deals before they're gone.
+                    </div>
+                </div>
+                <div class="tip-item">
+                    <div class="tip-number">5</div>
+                    <div>
+                        <strong>Start selling:</strong> Turn your unused items into cash by creating your
+                        first listing in minutes.
+                    </div>
+                </div>
+            </div>
+
+            <!-- App Download Section -->
+            <div class="app-download">
+                <div style="text-align: center; font-size: 16px; font-weight: 600; color: #2C1810; margin-bottom: 8px;">
+                    Download the App
+                </div>
+                <div style="text-align: center; font-size: 14px; color: #8B7355; margin-bottom: 16px;">
+                    Get the best experience on iOS and Android
+                </div>
+                <div class="app-buttons">
+                    <a href="{{IOS_APP_LINK}}" class="app-button">
+                        <img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=250x83" alt="Download on App Store">
+                    </a>
+                    <a href="{{ANDROID_APP_LINK}}" class="app-button">
+                        <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" style="height: 52px;">
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p class="footer-text">
+                You're receiving this email because you created an account on Jiran.
+                We're excited to have you in our community!
+            </p>
+
+            <div class="divider"></div>
+
+            <div class="social-links">
+                <a href="https://jiran.app" class="social-link">Website</a> •
+                <a href="https://jiran.app/help" class="social-link">Help Center</a> •
+                <a href="https://jiran.app/safety" class="social-link">Safety Tips</a> •
+                <a href="https://jiran.app/contact" class="social-link">Contact Us</a>
+            </div>
+
+            <p class="footer-text" style="margin-top: 20px;">
+                © 2025 Jiran. All rights reserved.<br>
+                Dubai, United Arab Emirates
+            </p>
+
+            <p class="footer-text" style="margin-top: 16px; font-size: 12px;">
+                Need help? Contact us at <a href="mailto:support@jiran.app" style="color: #2C5F8D; text-decoration: none;">support@jiran.app</a>
+            </p>
+
+            <p class="footer-text" style="margin-top: 12px; font-size: 11px;">
+                <a href="{{UNSUBSCRIBE_LINK}}" style="color: #8B7355; text-decoration: none;">Unsubscribe</a> •
+                <a href="{{PRIVACY_LINK}}" style="color: #8B7355; text-decoration: none;">Privacy Policy</a> •
+                <a href="{{TERMS_LINK}}" style="color: #8B7355; text-decoration: none;">Terms of Service</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

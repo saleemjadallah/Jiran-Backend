@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Your Jiran Account</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #FFF8F0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+        .header {
+            background: linear-gradient(135deg, #C1440E 0%, #E87A3E 100%);
+            padding: 40px 30px;
+            text-align: center;
+        }
+        .logo {
+            font-size: 32px;
+            font-weight: 700;
+            color: white;
+            letter-spacing: -0.5px;
+        }
+        .tagline {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            margin-top: 8px;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .greeting {
+            font-size: 24px;
+            color: #2C1810;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        .message {
+            font-size: 16px;
+            color: #2C1810;
+            margin-bottom: 32px;
+            line-height: 1.6;
+        }
+        .otp-container {
+            background: linear-gradient(135deg, rgba(193, 68, 14, 0.05) 0%, rgba(232, 122, 62, 0.05) 100%);
+            border: 2px solid #C1440E;
+            border-radius: 12px;
+            padding: 32px;
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        .otp-label {
+            font-size: 14px;
+            color: #8B7355;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+        .otp-code {
+            font-size: 48px;
+            font-weight: 700;
+            color: #C1440E;
+            letter-spacing: 12px;
+            font-family: 'Courier New', monospace;
+            margin-bottom: 12px;
+        }
+        .otp-expiry {
+            font-size: 13px;
+            color: #8B7355;
+        }
+        .warning-box {
+            background: #FFF8F0;
+            border-left: 4px solid #F4B942;
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            border-radius: 4px;
+        }
+        .warning-title {
+            font-weight: 600;
+            color: #2C1810;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        .warning-text {
+            font-size: 14px;
+            color: #2C1810;
+            line-height: 1.5;
+        }
+        .button-container {
+            text-align: center;
+            margin: 32px 0;
+        }
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #C1440E 0%, #E87A3E 100%);
+            color: white;
+            padding: 16px 40px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+            box-shadow: 0 4px 16px rgba(193, 68, 14, 0.3);
+            transition: transform 0.2s;
+        }
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(193, 68, 14, 0.4);
+        }
+        .footer {
+            background: #FFF8F0;
+            padding: 32px 30px;
+            text-align: center;
+            border-top: 1px solid rgba(139, 115, 85, 0.1);
+        }
+        .footer-text {
+            font-size: 13px;
+            color: #8B7355;
+            margin-bottom: 16px;
+            line-height: 1.6;
+        }
+        .social-links {
+            margin: 20px 0;
+        }
+        .social-link {
+            display: inline-block;
+            margin: 0 8px;
+            color: #2C5F8D;
+            text-decoration: none;
+            font-size: 13px;
+        }
+        .divider {
+            height: 1px;
+            background: rgba(139, 115, 85, 0.2);
+            margin: 24px 0;
+        }
+        .help-text {
+            font-size: 12px;
+            color: #8B7355;
+            margin-top: 16px;
+        }
+        .help-link {
+            color: #2C5F8D;
+            text-decoration: none;
+        }
+        @media only screen and (max-width: 600px) {
+            .container {
+                border-radius: 0;
+            }
+            .content {
+                padding: 30px 20px;
+            }
+            .header {
+                padding: 30px 20px;
+            }
+            .otp-code {
+                font-size: 36px;
+                letter-spacing: 8px;
+            }
+            .greeting {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">Jiran</div>
+            <div class="tagline">Your Neighborhood Marketplace</div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <h1 class="greeting">Welcome to Jiran! 🎉</h1>
+
+            <p class="message">
+                Thank you for joining our vibrant community. To complete your registration and start exploring
+                products from your neighbors, please verify your email address using the code below.
+            </p>
+
+            <!-- OTP Box -->
+            <div class="otp-container">
+                <div class="otp-label">Your Verification Code</div>
+                <div class="otp-code">{{OTP_CODE}}</div>
+                <div class="otp-expiry">⏱️ Expires in 10 minutes</div>
+            </div>
+
+            <!-- Security Warning -->
+            <div class="warning-box">
+                <div class="warning-title">🔒 Security Notice</div>
+                <div class="warning-text">
+                    Never share this code with anyone. Jiran staff will never ask for your verification code
+                    via email, phone, or message. If you didn't request this code, please ignore this email
+                    and consider changing your password.
+                </div>
+            </div>
+
+            <!-- CTA Button (Alternative to entering code manually) -->
+            <div class="button-container">
+                <a href="{{VERIFICATION_LINK}}" class="cta-button">Verify My Account</a>
+            </div>
+
+            <div class="help-text">
+                Having trouble? Copy and paste this link into your browser:<br>
+                <a href="{{VERIFICATION_LINK}}" class="help-link">{{VERIFICATION_LINK}}</a>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p class="footer-text">
+                This email was sent to <strong>{{USER_EMAIL}}</strong> because you started the registration
+                process on Jiran. If you didn't initiate this request, you can safely ignore this email.
+            </p>
+
+            <div class="divider"></div>
+
+            <div class="social-links">
+                <a href="https://jiran.app" class="social-link">Website</a> •
+                <a href="https://jiran.app/help" class="social-link">Help Center</a> •
+                <a href="https://jiran.app/contact" class="social-link">Contact Us</a>
+            </div>
+
+            <p class="footer-text" style="margin-top: 20px;">
+                © 2025 Jiran. All rights reserved.<br>
+                Dubai, United Arab Emirates
+            </p>
+
+            <p class="help-text" style="margin-top: 16px;">
+                Need help? Contact us at <a href="mailto:support@jiran.app" class="help-link">support@jiran.app</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

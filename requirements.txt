@@ -19,6 +19,8 @@ python-socketio[asyncio_client]==5.11.0
 redis==5.0.3
 structlog==23.3.0
 shapely==2.0.3
+aiosmtplib==3.0.1
+certifi>=2024.2.2
 stripe==8.7.0
 cryptography==42.0.5
 elasticsearch==8.11.0
