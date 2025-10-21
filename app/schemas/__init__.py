@@ -1,5 +1,6 @@
 from app.schemas.activity import ActivityFeedResponse, ActivityResponse, PersonalActivityResponse
 from app.schemas.auth import (
+    AuthResponse,
     LoginRequest,
     PasswordResetConfirm,
     PasswordResetRequest,
@@ -70,6 +71,7 @@ from app.schemas.verification import (
 __all__ = [
     "ActivityFeedResponse",
     "ActivityResponse",
+    "AuthResponse",
     "DeviceTokenRegisterRequest",
     "DeviceTokenResponse",
     "DeviceTokenUnregisterRequest",

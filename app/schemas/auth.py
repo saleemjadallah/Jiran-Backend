@@ -27,6 +27,15 @@ class TokenResponse(ORMBaseModel):
     expires_in: int = Field(..., description="Access token expiry in seconds", examples=[900])
 
 
+class AuthResponse(ORMBaseModel):
+    """Registration/Login response with tokens and user data"""
+    access_token: str = Field(..., examples=["eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."])
+    refresh_token: str = Field(..., examples=["def50200a1b8..."])
+    token_type: str = Field(default="bearer", examples=["bearer"])
+    expires_in: int = Field(..., description="Access token expiry in seconds", examples=[900])
+    user: dict = Field(..., description="User data")
+
+
 class SendOTPRequest(ORMBaseModel):
     email: EmailStr | None = Field(default=None, examples=["user@soukloop.com"])
     phone: str | None = Field(default=None, examples=["+971501234567"])

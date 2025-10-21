@@ -12,6 +12,7 @@ from app.config import settings
 from app.dependencies import get_current_active_user, get_db, get_redis_client
 from app.models.user import User
 from app.schemas import (
+    AuthResponse,
     LoginRequest,
     PasswordResetConfirm,
     PasswordResetRequest,
@@ -80,12 +81,12 @@ def _user_to_response(user: User) -> UserDetailResponse:
     )
 
 
-@router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/register", response_model=AuthResponse, status_code=status.HTTP_201_CREATED)
 async def register_user(
     payload: RegisterRequest,
     session: AsyncSession = Depends(get_db),
     redis: Redis = Depends(get_redis_client),
-) -> TokenResponse:
+) -> AuthResponse:
     existing = await session.execute(
         select(User).where(
             or_(
@@ -127,11 +128,16 @@ async def register_user(
 
     access_token = create_access_token({"sub": str(user.id), "role": user.role.value})
     refresh_token = create_refresh_token(str(user.id), user.role.value)
-    return TokenResponse(
+
+    # Return user data along with tokens
+    user_data = _user_to_response(user).model_dump(mode="json")
+
+    return AuthResponse(
         access_token=access_token,
         refresh_token=refresh_token,
         token_type="bearer",
         expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        user=user_data,
     )
 
 
