@@ -3,6 +3,7 @@ import secrets
 from datetime import timedelta
 
 from redis.asyncio import Redis
+from redis.exceptions import RedisError
 
 from app.services.email_service import email_service
 
@@ -66,15 +67,21 @@ async def store_otp(identifier: str, otp: str, redis_client: Redis | None) -> No
     otp_key = _otp_key(identifier)
     rate_key = _rate_limit_key(identifier)
 
-    current_count = await redis_client.get(rate_key)
-    if current_count is None:
-        await redis_client.set(rate_key, 1, ex=int(OTP_RATE_LIMIT_WINDOW.total_seconds()))
-    else:
-        if int(current_count) >= OTP_RATE_LIMIT:
-            raise ValueError("OTP request limit reached. Please try again later.")
-        await redis_client.incr(rate_key)
+    try:
+        current_count = await redis_client.get(rate_key)
+        if current_count is None:
+            await redis_client.set(rate_key, 1, ex=int(OTP_RATE_LIMIT_WINDOW.total_seconds()))
+        else:
+            if int(current_count) >= OTP_RATE_LIMIT:
+                raise ValueError("OTP request limit reached. Please try again later.")
+            await redis_client.incr(rate_key)
 
-    await redis_client.set(otp_key, otp, ex=OTP_TTL_SECONDS)
+        await redis_client.set(otp_key, otp, ex=OTP_TTL_SECONDS)
+    except RedisError as exc:
+        logger.error(
+            "Failed to store OTP in Redis",
+            extra={"identifier": identifier, "error": str(exc)},
+        )
 
 
 async def verify_otp(identifier: str, otp: str, redis_client: Redis | None) -> bool:
@@ -82,8 +89,14 @@ async def verify_otp(identifier: str, otp: str, redis_client: Redis | None) -> b
         logger.warning("Redis client unavailable when verifying OTP", extra={"identifier": identifier})
         return False
     otp_key = _otp_key(identifier)
-    stored_otp = await redis_client.get(otp_key)
-    if stored_otp and secrets.compare_digest(stored_otp, otp):
-        await redis_client.delete(otp_key)
-        return True
+    try:
+        stored_otp = await redis_client.get(otp_key)
+        if stored_otp and secrets.compare_digest(stored_otp, otp):
+            await redis_client.delete(otp_key)
+            return True
+    except RedisError as exc:
+        logger.error(
+            "Failed to verify OTP in Redis",
+            extra={"identifier": identifier, "error": str(exc)},
+        )
     return False
