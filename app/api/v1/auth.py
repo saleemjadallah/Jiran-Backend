@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import secrets
 from datetime import datetime, timezone
 
@@ -37,6 +38,8 @@ from app.utils.otp import generate_otp, send_otp_email, send_otp_sms, store_otp,
 from app.services.email_service import email_service
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
+
+logger = logging.getLogger(__name__)
 
 PASSWORD_RESET_PREFIX = "password-reset"
 PASSWORD_RESET_TTL_SECONDS = 3600
