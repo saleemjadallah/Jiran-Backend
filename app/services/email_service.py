@@ -1,12 +1,8 @@
 """Email service for sending transactional emails with templates."""
 
-import aiosmtplib
-import ssl
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
 from pathlib import Path
 
-import certifi
+import httpx
 import structlog
 
 from app.config import settings
@@ -16,7 +12,7 @@ logger = structlog.get_logger(__name__)
 
 class EmailService:
     """
-    Email service for sending transactional emails using SMTP.
+    Email service for sending transactional emails using ZeptoMail API.
 
     Supports:
     - OTP verification emails
@@ -26,27 +22,21 @@ class EmailService:
     """
 
     def __init__(self):
-        self.smtp_host = settings.SMTP_HOST
-        self.smtp_port = settings.SMTP_PORT
-        self.smtp_username = settings.SMTP_USERNAME
-        self.smtp_password = settings.SMTP_PASSWORD
-        self.from_email = settings.SMTP_FROM_EMAIL or "Jiran <noreply@jiran.app>"
+        self.api_url = settings.ZEPTO_API_URL
+        self.send_token = settings.ZEPTO_SEND_TOKEN
+        self.from_email = settings.ZEPTO_FROM_EMAIL
+        self.from_name = settings.ZEPTO_FROM_NAME
 
         # Email templates directory (backend/email_templates/)
         self.templates_dir = Path(__file__).parent.parent.parent / "email_templates"
 
-        # Check if SMTP is configured
-        self.is_configured = all([
-            self.smtp_host,
-            self.smtp_username,
-            self.smtp_password,
-        ])
+        # Check if ZeptoMail is configured
+        self.is_configured = bool(self.send_token)
 
         if not self.is_configured:
             logger.warning(
-                "SMTP not configured - emails will be logged only",
-                smtp_host=self.smtp_host,
-                smtp_username=self.smtp_username,
+                "ZeptoMail not configured - emails will be logged only",
+                api_url=self.api_url,
             )
 
     async def send_email(
@@ -54,23 +44,23 @@ class EmailService:
         to_email: str,
         subject: str,
         html_body: str,
-        plain_body: str | None = None,
+        to_name: str | None = None,
     ) -> bool:
         """
-        Send an email using SMTP.
+        Send an email using ZeptoMail API.
 
         Args:
             to_email: Recipient email address
             subject: Email subject line
             html_body: HTML email content
-            plain_body: Plain text fallback (optional)
+            to_name: Recipient name (optional)
 
         Returns:
             True if email sent successfully, False otherwise
         """
         if not self.is_configured:
             logger.info(
-                "Email sending skipped (SMTP not configured)",
+                "Email sending skipped (ZeptoMail not configured)",
                 to=to_email,
                 subject=subject,
                 html_preview=html_body[:100] + "..." if len(html_body) > 100 else html_body,
@@ -78,48 +68,54 @@ class EmailService:
             return True  # Return success to not block development
 
         try:
-            # Create message
-            message = MIMEMultipart("alternative")
-            message["From"] = self.from_email
-            message["To"] = to_email
-            message["Subject"] = subject
+            # Build headers
+            headers = {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "authorization": f"Zoho-enczapikey {self.send_token}",
+            }
 
-            # Add plain text version if provided
-            if plain_body:
-                message.attach(MIMEText(plain_body, "plain"))
+            # Build payload matching ZeptoMail format
+            to_data = {"email_address": {"address": to_email}}
+            if to_name:
+                to_data["email_address"]["name"] = to_name
 
-            # Add HTML version
-            message.attach(MIMEText(html_body, "html"))
+            payload = {
+                "from": {"address": self.from_email, "name": self.from_name},
+                "to": [to_data],
+                "subject": subject,
+                "htmlbody": html_body,
+            }
 
-            # Send email via SMTP with STARTTLS (ZeptoMail method)
-            # Create SSL context with certifi CA bundle for certificate validation
-            tls_context = ssl.create_default_context(cafile=certifi.where())
+            # Send email via API
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    self.api_url,
+                    json=payload,
+                    headers=headers,
+                    timeout=30.0,
+                )
 
-            # Connect without auto-STARTTLS, then manually upgrade to TLS
-            smtp = aiosmtplib.SMTP(
-                hostname=self.smtp_host,
-                port=self.smtp_port,
-                timeout=30,
-                start_tls=False,  # Disable auto-STARTTLS
-                use_tls=False,    # Don't use TLS on initial connection
-                tls_context=tls_context,  # Use custom SSL context
-            )
-            await smtp.connect()
-            await smtp.starttls(tls_context=tls_context)  # Manually upgrade to TLS with context
-            await smtp.login(self.smtp_username, self.smtp_password)
-            await smtp.send_message(message)
-            await smtp.quit()
-
-            logger.info(
-                "Email sent successfully",
-                to=to_email,
-                subject=subject,
-            )
-            return True
+                if response.status_code == 200:
+                    logger.info(
+                        "Email sent successfully via ZeptoMail API",
+                        to=to_email,
+                        subject=subject,
+                    )
+                    return True
+                else:
+                    logger.error(
+                        "ZeptoMail API error",
+                        to=to_email,
+                        subject=subject,
+                        status_code=response.status_code,
+                        response=response.text,
+                    )
+                    return False
 
         except Exception as e:
             logger.error(
-                "Failed to send email",
+                "Failed to send email via ZeptoMail API",
                 to=to_email,
                 subject=subject,
                 error=str(e),
@@ -162,23 +158,12 @@ class EmailService:
             verification_link = f"https://api.jiran.app/api/v1/auth/verify-email?code={otp}&email={email}"
             html_body = html_body.replace("{{VERIFICATION_LINK}}", verification_link)
 
-            # Plain text fallback
-            plain_body = f"""
-Your Jiran Verification Code: {otp}
-
-This code will expire in 10 minutes.
-
-Or click this link to verify: {verification_link}
-
-If you didn't request this code, please ignore this email.
-            """.strip()
-
             # Send email
             return await self.send_email(
                 to_email=email,
                 subject="Verify Your Jiran Account - OTP Inside",
                 html_body=html_body,
-                plain_body=plain_body,
+                to_name=user_name,
             )
 
         except Exception as e:
@@ -219,33 +204,12 @@ If you didn't request this code, please ignore this email.
             html_body = html_body.replace("{{PRIVACY_LINK}}", "https://jiran.app/privacy")
             html_body = html_body.replace("{{TERMS_LINK}}", "https://jiran.app/terms")
 
-            # Plain text fallback
-            plain_body = f"""
-Welcome to Jiran, {name}!
-
-Thank you for joining our community. You're now part of your neighborhood's trusted marketplace.
-
-Get started:
-1. Complete your profile
-2. Explore products from neighbors
-3. Join live shopping events
-
-Download our app:
-iOS: https://apps.apple.com/app/jiran
-Android: https://play.google.com/store/apps/jiran
-
-Need help? Contact us at support@jiran.app
-
-Happy shopping!
-The Jiran Team
-            """.strip()
-
             # Send email
             return await self.send_email(
                 to_email=email,
                 subject="Welcome to Jiran! 🎉",
                 html_body=html_body,
-                plain_body=plain_body,
+                to_name=name,
             )
 
         except Exception as e:
@@ -325,29 +289,12 @@ The Jiran Team
 </html>
             """.strip()
 
-            # Plain text fallback
-            plain_body = f"""
-{f"Hi {user_name}," if user_name else "Hello,"}
-
-We received a request to reset your password for your Jiran account.
-
-Click this link to reset your password:
-{web_reset_link}
-
-This link will expire in 1 hour.
-
-If you didn't request a password reset, please ignore this email.
-
-Best regards,
-The Jiran Team
-            """.strip()
-
             # Send email
             return await self.send_email(
                 to_email=email,
                 subject="Reset Your Jiran Password",
                 html_body=html_body,
-                plain_body=plain_body,
+                to_name=user_name,
             )
 
         except Exception as e:
