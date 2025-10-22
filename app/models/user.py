@@ -3,14 +3,13 @@
 This module defines the User model with support for:
 - Email/phone/username authentication
 - Role-based access (buyer, seller, both, admin)
-- Geographic location with PostGIS (automatic GIST indexing)
+- Geographic location with lat/lon coordinates
 - Stripe payment integration
 - Identity verification status
 """
 from datetime import datetime
 from enum import Enum
 
-from geoalchemy2 import Geometry
 from sqlalchemy import Boolean, DateTime, Enum as SqlEnum, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -65,8 +64,9 @@ class User(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
-    # Location (PostGIS with automatic GIST index)
-    location: Mapped[str | None] = mapped_column(Geometry(geometry_type="POINT", srid=4326))
+    # Location (lat/lon coordinates without PostGIS)
+    location_lat: Mapped[float | None] = mapped_column()
+    location_lon: Mapped[float | None] = mapped_column()
     neighborhood: Mapped[str | None] = mapped_column(String(255))
     building_name: Mapped[str | None] = mapped_column(String(255))
 

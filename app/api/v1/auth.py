@@ -26,7 +26,6 @@ from app.schemas import (
     UserStats,
     VerifyOTPRequest,
 )
-from app.utils.geo import point_from_coordinates, point_to_coordinates
 from app.utils.jwt import (
     create_access_token,
     create_refresh_token,
@@ -44,12 +43,11 @@ PASSWORD_RESET_TTL_SECONDS = 3600
 
 
 def _user_to_response(user: User) -> UserDetailResponse:
-    coordinates = point_to_coordinates(user.location)
     location = None
-    if coordinates:
+    if user.location_lat is not None and user.location_lon is not None:
         location = UserLocation(
-            latitude=coordinates.latitude,
-            longitude=coordinates.longitude,
+            latitude=user.location_lat,
+            longitude=user.location_lon,
             neighborhood=user.neighborhood,
             building_name=user.building_name,
         )
