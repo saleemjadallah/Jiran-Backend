@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
 from app.dependencies import get_current_active_user, get_db, get_redis_client
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.schemas import (
     AuthResponse,
     LoginRequest,
@@ -97,13 +97,25 @@ async def register_user(
     if existing.scalar_one_or_none():
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User already exists")
 
+    role: UserRole
+    if isinstance(payload.role, UserRole):
+        role = payload.role
+    else:
+        try:
+            role = UserRole(str(payload.role).strip().lower())
+        except ValueError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Invalid role. Must be buyer, seller, both, or admin.",
+            ) from exc
+
     user = User(
         email=payload.email,
         username=payload.username,
         phone=payload.phone,
         password_hash=hash_password(payload.password),
         full_name=payload.full_name,
-        role=payload.role,
+        role=role,
     )
 
     # Location can be added later via profile update
