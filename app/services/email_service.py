@@ -1,13 +1,13 @@
 """Email service for sending transactional emails with templates."""
 
+import logging
 from pathlib import Path
 
 import httpx
-import structlog
 
 from app.config import settings
 
-logger = structlog.get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class EmailService:
@@ -35,8 +35,8 @@ class EmailService:
 
         if not self.is_configured:
             logger.warning(
-                "ZeptoMail not configured - emails will be logged only",
-                api_url=self.api_url,
+                'ZeptoMail not configured - emails will be logged only',
+                extra={'api_url': self.api_url},
             )
 
     async def send_email(
@@ -60,10 +60,12 @@ class EmailService:
         """
         if not self.is_configured:
             logger.info(
-                "Email sending skipped (ZeptoMail not configured)",
-                to=to_email,
-                subject=subject,
-                html_preview=html_body[:100] + "..." if len(html_body) > 100 else html_body,
+                'Email sending skipped (ZeptoMail not configured)',
+                extra={
+                    'to': to_email,
+                    'subject': subject,
+                    'html_preview': html_body[:100] + '...' if len(html_body) > 100 else html_body,
+                },
             )
             return True  # Return success to not block development
 
@@ -98,27 +100,26 @@ class EmailService:
 
                 if response.status_code == 200:
                     logger.info(
-                        "Email sent successfully via ZeptoMail API",
-                        to=to_email,
-                        subject=subject,
+                        'Email sent successfully via ZeptoMail API',
+                        extra={'to': to_email, 'subject': subject},
                     )
                     return True
                 else:
                     logger.error(
-                        "ZeptoMail API error",
-                        to=to_email,
-                        subject=subject,
-                        status_code=response.status_code,
-                        response=response.text,
+                        'ZeptoMail API error',
+                        extra={
+                            'to': to_email,
+                            'subject': subject,
+                            'status_code': response.status_code,
+                            'response': response.text,
+                        },
                     )
                     return False
 
         except Exception as e:
             logger.error(
-                "Failed to send email via ZeptoMail API",
-                to=to_email,
-                subject=subject,
-                error=str(e),
+                'Failed to send email via ZeptoMail API',
+                extra={'to': to_email, 'subject': subject, 'error': str(e)},
                 exc_info=True,
             )
             return False
@@ -140,7 +141,7 @@ class EmailService:
             template_path = self.templates_dir / "otp_verification.html"
 
             if not template_path.exists():
-                logger.error("OTP email template not found", path=str(template_path))
+                logger.error('OTP email template not found', extra={'path': str(template_path)})
                 return False
 
             with open(template_path, "r", encoding="utf-8") as f:
@@ -167,7 +168,7 @@ class EmailService:
             )
 
         except Exception as e:
-            logger.error("Failed to send OTP email", email=email, error=str(e), exc_info=True)
+            logger.error('Failed to send OTP email', extra={'email': email, 'error': str(e)}, exc_info=True)
             return False
 
     async def send_welcome_email(self, email: str, name: str) -> bool:
@@ -186,7 +187,7 @@ class EmailService:
             template_path = self.templates_dir / "welcome.html"
 
             if not template_path.exists():
-                logger.error("Welcome email template not found", path=str(template_path))
+                logger.error('Welcome email template not found', extra={'path': str(template_path)})
                 return False
 
             with open(template_path, "r", encoding="utf-8") as f:
@@ -213,7 +214,7 @@ class EmailService:
             )
 
         except Exception as e:
-            logger.error("Failed to send welcome email", email=email, error=str(e), exc_info=True)
+            logger.error('Failed to send welcome email', extra={'email': email, 'error': str(e)}, exc_info=True)
             return False
 
     async def send_password_reset_email(self, email: str, reset_token: str, user_name: str | None = None) -> bool:
@@ -298,7 +299,7 @@ class EmailService:
             )
 
         except Exception as e:
-            logger.error("Failed to send password reset email", email=email, error=str(e), exc_info=True)
+            logger.error('Failed to send password reset email', extra={'email': email, 'error': str(e)}, exc_info=True)
             return False
 
 
