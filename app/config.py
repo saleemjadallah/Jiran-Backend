@@ -54,7 +54,7 @@ class Settings(BaseSettings):
     # ZeptoMail API Configuration
     ZEPTO_API_URL: str = "https://api.zeptomail.com/v1.1/email"
     ZEPTO_SEND_TOKEN: str | None = None
-    ZEPTO_FROM_EMAIL: str = "noreply@jiran.app"
+    ZEPTO_FROM_EMAIL: str = "support@jiran.app"
     ZEPTO_FROM_NAME: str = "Jiran"
 
     TWILIO_ACCOUNT_SID: str | None = None
