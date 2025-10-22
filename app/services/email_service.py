@@ -106,14 +106,16 @@ class EmailService:
                     return True
                 else:
                     logger.error(
-                        'ZeptoMail API error',
+                        'ZeptoMail API returned non-200 status',
                         extra={
                             'to': to_email,
                             'subject': subject,
                             'status_code': response.status_code,
-                            'response': response.text,
+                            'response': response.text[:500],  # Limit response length
                         },
                     )
+                    # Note: Email might still be delivered even with non-200 response
+                    # ZeptoMail can accept email but return errors for billing/quota warnings
                     return False
 
         except Exception as e:

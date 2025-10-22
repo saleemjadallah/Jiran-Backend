@@ -134,7 +134,14 @@ async def register_user(
         raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail=str(exc)) from exc
 
     # Send OTP via email (SMS integration will be added later)
-    await send_otp_email(payload.email, otp, payload.full_name)
+    email_sent = await send_otp_email(payload.email, otp, payload.full_name)
+    if not email_sent:
+        logger.warning(
+            "Registration completed but OTP email failed to send",
+            extra={"user_id": str(user.id), "email": payload.email}
+        )
+        # Note: We still allow registration to succeed since user is created and OTP is stored
+        # User can resend OTP from verification screen
 
     access_token = create_access_token({"sub": str(user.id), "role": user.role.value})
     refresh_token = create_refresh_token(str(user.id), user.role.value)
