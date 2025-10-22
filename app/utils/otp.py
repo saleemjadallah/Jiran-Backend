@@ -59,7 +59,10 @@ async def send_otp_sms(phone: str, otp: str) -> bool:
     return True
 
 
-async def store_otp(identifier: str, otp: str, redis_client: Redis) -> None:
+async def store_otp(identifier: str, otp: str, redis_client: Redis | None) -> None:
+    if redis_client is None:
+        logger.warning("Redis client unavailable when storing OTP", extra={"identifier": identifier})
+        return
     otp_key = _otp_key(identifier)
     rate_key = _rate_limit_key(identifier)
 
@@ -74,7 +77,10 @@ async def store_otp(identifier: str, otp: str, redis_client: Redis) -> None:
     await redis_client.set(otp_key, otp, ex=OTP_TTL_SECONDS)
 
 
-async def verify_otp(identifier: str, otp: str, redis_client: Redis) -> bool:
+async def verify_otp(identifier: str, otp: str, redis_client: Redis | None) -> bool:
+    if redis_client is None:
+        logger.warning("Redis client unavailable when verifying OTP", extra={"identifier": identifier})
+        return False
     otp_key = _otp_key(identifier)
     stored_otp = await redis_client.get(otp_key)
     if stored_otp and secrets.compare_digest(stored_otp, otp):
