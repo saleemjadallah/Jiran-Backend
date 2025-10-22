@@ -17,12 +17,16 @@ def generate_otp(length: int = 6) -> str:
     return "".join(str(secrets.randbelow(10)) for _ in range(length))
 
 
-def _rate_limit_key(identifier: str) -> str:
-    return f"otp:rate:{identifier}"
+def _normalize_identifier(identifier: str) -> str:
+    return identifier.strip().lower()
 
 
 def _otp_key(identifier: str) -> str:
-    return f"otp:{identifier}"
+    return f"otp:{_normalize_identifier(identifier)}"
+
+
+def _rate_limit_key(identifier: str) -> str:
+    return f"otp:rate:{_normalize_identifier(identifier)}"
 
 
 async def send_otp_email(email: str, otp: str, user_name: str | None = None) -> bool:

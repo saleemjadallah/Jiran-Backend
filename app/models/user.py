@@ -11,7 +11,7 @@ from datetime import datetime
 from enum import Enum
 
 from sqlalchemy import Boolean, DateTime, Enum as SqlEnum, Integer, String, Text
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from app.models.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
 
@@ -59,7 +59,9 @@ class User(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
     # Role and status
     role: Mapped[UserRole] = mapped_column(
-        SqlEnum(UserRole, name="user_role"), default=UserRole.BUYER, nullable=False
+        SqlEnum(UserRole, name="user_role", values_callable=lambda x: [e.value for e in x]),
+        default=UserRole.BUYER,
+        nullable=False
     )
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
@@ -206,6 +208,18 @@ class User(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         back_populates="reviewer",
         cascade="all, delete-orphan",
     )
+
+    @validates("role")
+    def _normalize_role(self, _key: str, value: UserRole | str) -> UserRole:
+        if isinstance(value, UserRole):
+            return value
+        if isinstance(value, str):
+            normalized = value.strip().lower()
+            try:
+                return UserRole(normalized)
+            except ValueError as exc:  # pragma: no cover - defensive guard
+                raise ValueError("Role must be one of buyer, seller, both, admin") from exc
+        raise ValueError("Role must be a valid user role")
 
     def __repr__(self) -> str:  # pragma: no cover - debug helper
         return f"<User {self.id} {self.email}>"

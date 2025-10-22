@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Self
 from uuid import UUID
 
-from pydantic import EmailStr, Field, model_validator
+from pydantic import EmailStr, Field, field_validator, model_validator
 
 from app.models.product import ProductCategory
 from app.models.user import UserRole
@@ -36,6 +36,19 @@ class UserCreate(ORMBaseModel):
     full_name: str = Field(..., max_length=255)
     role: UserRole = UserRole.BUYER
     location: UserLocation | None = None
+
+    @field_validator("role", mode="before")
+    @classmethod
+    def normalize_role(cls, value: UserRole | str) -> UserRole:
+        if isinstance(value, UserRole):
+            return value
+        if isinstance(value, str):
+            normalized = value.strip().lower()
+            try:
+                return UserRole(normalized)
+            except ValueError as exc:  # pragma: no cover - defensive guard
+                raise ValueError("Role must be one of buyer, seller, both, admin") from exc
+        raise ValueError("Role must be a valid user role")
 
 
 class UserUpdate(ORMBaseModel):
@@ -74,4 +87,3 @@ class UserDetailResponse(UserResponse):
     is_active: bool = Field(default=True)
     stripe_customer_id: str | None = Field(default=None)
     stripe_connect_account_id: str | None = Field(default=None)
-
