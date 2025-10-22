@@ -1,6 +1,6 @@
 from typing import Self
 
-from pydantic import EmailStr, Field, model_validator
+from pydantic import EmailStr, Field, field_validator, model_validator
 
 from app.models.user import UserRole
 from app.schemas.base import ORMBaseModel
@@ -13,6 +13,19 @@ class RegisterRequest(ORMBaseModel):
     phone: str = Field(..., min_length=8, max_length=20, examples=["+971501234567"])
     full_name: str = Field(..., max_length=255, examples=["Layla Al Falasi"])
     role: UserRole = Field(default=UserRole.BUYER)
+
+    @field_validator("role", mode="before")
+    @classmethod
+    def normalize_role(cls, value: UserRole | str) -> UserRole:
+        if isinstance(value, UserRole):
+            return value
+        if isinstance(value, str):
+            normalized = value.strip().lower()
+            try:
+                return UserRole(normalized)
+            except ValueError as exc:
+                raise ValueError("Role must be one of buyer, seller, both, admin") from exc
+        raise ValueError("Role must be a valid user role")
 
 
 class LoginRequest(ORMBaseModel):
