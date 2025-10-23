@@ -70,3 +70,13 @@ Thumbs.db
 *.tmp
 *.bak
 *.cache
+
+# Security - Never commit these
+*_REPORT.md
+*_VERIFICATION*.md
+DB_SCHEMA*.md
+*connection*.py
+test_db*.py
+fix_*.py
+verify_*.py
+check_*.py
