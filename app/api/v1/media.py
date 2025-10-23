@@ -21,7 +21,7 @@ from app.core.redis import get_redis
 from app.dependencies import get_current_active_user
 from app.models.user import User
 
-router = APIRouter(prefix="/api/v1/media", tags=["media"])
+router = APIRouter(prefix="/media", tags=["media"])
 
 
 # ============================================================================
