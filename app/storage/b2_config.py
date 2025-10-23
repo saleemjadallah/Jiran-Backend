@@ -92,6 +92,35 @@ class B2Config:
         )
 
     @classmethod
+    def get_public_url(cls, bucket: str, key: str) -> str:
+        """
+        Generate public URL for a file in B2 storage.
+        Uses CDN URL if configured, otherwise falls back to direct B2 URL.
+
+        Args:
+            bucket: Bucket name (e.g., 'jiranapp')
+            key: File key/path (e.g., 'recorded/user123/video.mp4')
+
+        Returns:
+            str: Public URL for the file
+
+        Example:
+            # With CDN configured
+            url = B2Config.get_public_url('jiranapp', 'videos/123.mp4')
+            # Returns: https://cdn.jiran.app/file/jiranapp/videos/123.mp4
+
+            # Without CDN
+            # Returns: https://s3.us-east-005.backblazeb2.com/jiranapp/videos/123.mp4
+        """
+        if cls.CDN_URL:
+            # CDN URL already includes bucket in the path
+            # Format: https://cdn.jiran.app/file/jiranapp
+            return f"{cls.CDN_URL}/{key}"
+        else:
+            # Direct B2 URL
+            return f"{cls.ENDPOINT_URL}/{bucket}/{key}"
+
+    @classmethod
     def validate_config(cls) -> bool:
         """
         Validate B2 configuration

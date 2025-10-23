@@ -32,6 +32,7 @@ from app.database import async_session_maker
 from app.models.product import Product, ProductCategory, FeedType
 from app.models.user import User
 from app.storage.b2_config import B2Config
+from app.services.thumbnail_service import thumbnail_service
 
 
 async def download_sample_video(url: str, output_path: str) -> bool:
@@ -91,11 +92,13 @@ async def upload_video_to_b2(file_path: str, user_id: str) -> tuple[str, str] | 
             }
         )
 
-        # Generate public URL
-        video_url = f"{B2Config.ENDPOINT_URL}/{bucket_name}/{file_key}"
+        # Generate public URL (uses CDN if configured)
+        video_url = B2Config.get_public_url(bucket_name, file_key)
 
         print(f"✅ Video uploaded successfully!")
         print(f"   URL: {video_url}")
+        if B2Config.CDN_URL:
+            print(f"   ☁️  Served via Cloudflare CDN")
 
         return video_url, file_key
 
@@ -109,6 +112,7 @@ async def upload_video_to_b2(file_path: str, user_id: str) -> tuple[str, str] | 
 async def create_product_with_video(
     video_url: str,
     video_key: str,
+    thumbnail_url: str,
     user_id: str,
     title: str = "Test Video Product",
     description: str = "🎬 First real video uploaded to Backblaze B2! Testing the full integration pipeline."
@@ -118,10 +122,7 @@ async def create_product_with_video(
 
     async with async_session_maker() as session:
         try:
-            # Use a placeholder thumbnail (can be enhanced later with real thumbnail extraction)
-            thumbnail_url = "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&q=80"
-
-            # Create product with video
+            # Create product with video and real thumbnail
             product = Product(
                 id=uuid.uuid4(),
                 seller_id=uuid.UUID(user_id),
@@ -238,12 +239,31 @@ async def main():
     video_url, video_key = result
     print()
 
-    # Step 4: Create product with video in database
-    print("Step 4: Create Product in Database")
+    # Step 4: Generate and upload thumbnail
+    print("Step 4: Generate and Upload Thumbnail")
+    print("-" * 70)
+    try:
+        thumbnail_url, thumbnail_key = thumbnail_service.generate_and_upload_thumbnail(
+            video_path=temp_video_path,
+            user_id=user_id,
+            video_filename='test_video.mp4'
+        )
+        print(f"✅ Thumbnail generated and uploaded!")
+        print(f"   URL: {thumbnail_url}")
+    except Exception as e:
+        print(f"❌ Failed to generate thumbnail: {e}")
+        print("   Using placeholder thumbnail instead...")
+        thumbnail_url = "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&q=80"
+
+    print()
+
+    # Step 5: Create product with video in database
+    print("Step 5: Create Product in Database")
     print("-" * 70)
     product = await create_product_with_video(
         video_url=video_url,
         video_key=video_key,
+        thumbnail_url=thumbnail_url,
         user_id=user_id,
         title="Backblaze B2 Test Video",
         description="🎬 Testing real video upload and playback from B2! This is a sample video to verify the integration works."
@@ -255,13 +275,14 @@ async def main():
 
     print()
     print("=" * 70)
-    print("✅ SUCCESS! Video uploaded and ready for testing")
+    print("✅ SUCCESS! Video and thumbnail uploaded and ready for testing")
     print("=" * 70)
     print()
     print(f"📦 Product ID: {product.id}")
     print(f"📹 Video URL: {video_url}")
     print(f"🔑 Video Key: {video_key}")
-    print(f"📸 Thumbnail: {product.video_thumbnail_url}")
+    print(f"📸 Thumbnail URL: {product.video_thumbnail_url}")
+    print(f"🖼️  Thumbnail Key: {thumbnail_key if 'thumbnail_key' in locals() else 'N/A'}")
     print(f"👤 User ID: {user_id}")
     print(f"💰 Price: {product.price} {product.currency}")
     print(f"📂 Feed Type: {product.feed_type.value}")
@@ -269,9 +290,12 @@ async def main():
     print("🎯 Next steps:")
     print("1. Restart your Flutter app")
     print("2. Navigate to Discover feed")
-    print("3. You should see the video in the feed!")
+    print("3. You should see the video with a real thumbnail in the feed!")
     print()
-    print("📝 Note: The frontend .env file has been updated to disable mock data.")
+    print("📝 Notes:")
+    print("  • Frontend .env has USE_MOCK_DISCOVER_DATA=false")
+    print("  • Video served via Cloudflare CDN (faster, free bandwidth)")
+    print("  • Thumbnail auto-generated from video at 1 second mark")
     print()
 
     # Cleanup
