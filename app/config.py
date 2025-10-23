@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     ELASTICSEARCH_URL: str = "http://localhost:9200"
 
     SECRET_KEY: str = Field(min_length=32, description="Secret key for JWT tokens - MUST be set in environment")
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 120  # 2 hours for better UX during video uploads
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     JWT_ALGORITHM: str = "HS256"
 
