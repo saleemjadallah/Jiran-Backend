@@ -29,10 +29,14 @@ async def lifespan(app: FastAPI):
     import asyncio
     asyncio.create_task(warming_service.warm_all())
 
-    # Initialize Elasticsearch
+    # Initialize Elasticsearch (optional)
     from app.services.elasticsearch_service import elasticsearch_service
-    await elasticsearch_service.connect()
-    app.debug and print("✅ Elasticsearch service initialized")
+    try:
+        await elasticsearch_service.connect()
+        app.debug and print("✅ Elasticsearch service initialized")
+    except Exception as e:
+        app.debug and print(f"⚠️ Elasticsearch not available: {e}")
+        app.debug and print("ℹ️ Search features will be disabled")
 
     # Start background jobs (disabled for initial deployment)
     # Uncomment when database is ready
@@ -42,8 +46,11 @@ async def lifespan(app: FastAPI):
     yield
 
     # Cleanup on shutdown
-    await elasticsearch_service.disconnect()
-    app.debug and print("✅ Elasticsearch service closed")
+    try:
+        await elasticsearch_service.disconnect()
+        app.debug and print("✅ Elasticsearch service closed")
+    except Exception:
+        pass  # Elasticsearch was not connected
 
     await close_redis_manager()
     app.debug and print("✅ Redis cache manager closed")

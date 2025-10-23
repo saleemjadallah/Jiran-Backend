@@ -42,6 +42,15 @@ JWT_ALGORITHM=HS256
 SOCKET_IO_MESSAGE_QUEUE=${REDIS_URL}/1
 ```
 
+### Elasticsearch (Optional - For Advanced Search)
+```bash
+# If you add Elasticsearch service to Railway:
+ELASTICSEARCH_URL=http://elasticsearch.railway.internal:9200
+#
+# Note: Advanced search features require Elasticsearch
+# If not set, app will use basic PostgreSQL search
+```
+
 ### CORS (Update with your domains)
 ```bash
 CORS_ALLOWED_ORIGINS=["https://jiran.app","https://www.jiran.app","https://api.jiran.app"]
@@ -140,19 +149,25 @@ RAILWAY_SERVICE_ID   # Your service ID
 - Select "Database → Redis"
 - Railway auto-sets `REDIS_URL`
 
-### 4. Add Backend Service
+### 4. Add Elasticsearch (Optional - For Advanced Search)
+- Click "+ New"
+- Select "Database → Elasticsearch" (if available) OR use Docker template
+- Set as environment variable: `ELASTICSEARCH_URL=http://elasticsearch.railway.internal:9200`
+- Note: This is optional - app works without it using basic search
+
+### 5. Add Backend Service
 - Click "+ New"
 - Select "GitHub Repo"
 - Choose your backend repository
 - Railway will detect Python and install dependencies
 
-### 5. Add Environment Variables
+### 6. Add Environment Variables
 - Click on Backend Service
 - Go to "Variables" tab
 - Click "Raw Editor"
 - **Paste all variables from sections above**
 
-### 6. Generate SECRET_KEY
+### 7. Generate SECRET_KEY
 ```bash
 # Run locally:
 python -c "import secrets; print(secrets.token_urlsafe(32))"
@@ -163,12 +178,12 @@ python -c "import secrets; print(secrets.token_urlsafe(32))"
 # Add to Railway as SECRET_KEY
 ```
 
-### 7. Set Build Command (if needed)
+### 8. Set Build Command (if needed)
 - Settings → Build
 - Build Command: `pip install -r requirements.txt`
 - Start Command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
 
-### 8. Deploy
+### 9. Deploy
 - Click "Deploy"
 - Railway will build and deploy automatically
 
