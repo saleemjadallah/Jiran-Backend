@@ -88,17 +88,35 @@ async def register_user(
     session: AsyncSession = Depends(get_db),
     redis: Redis = Depends(get_redis_client),
 ) -> AuthResponse:
-    existing = await session.execute(
-        select(User).where(
-            or_(
-                func.lower(User.email) == payload.email.lower(),
-                func.lower(User.username) == payload.username.lower(),
-                User.phone == payload.phone,
-            )
-        )
+    # Check for existing email (case-insensitive)
+    existing_email = await session.execute(
+        select(User).where(func.lower(User.email) == payload.email.lower())
     )
-    if existing.scalar_one_or_none():
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User already exists")
+    if existing_email.scalar_one_or_none():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered. Please use a different email or try logging in."
+        )
+
+    # Check for existing username (case-insensitive)
+    existing_username = await session.execute(
+        select(User).where(func.lower(User.username) == payload.username.lower())
+    )
+    if existing_username.scalar_one_or_none():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username already taken. Please choose a different username."
+        )
+
+    # Check for existing phone number
+    existing_phone = await session.execute(
+        select(User).where(User.phone == payload.phone)
+    )
+    if existing_phone.scalar_one_or_none():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Phone number already registered. Please use a different phone number."
+        )
 
     role: UserRole
     if isinstance(payload.role, UserRole):
