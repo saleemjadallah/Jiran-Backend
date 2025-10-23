@@ -1,0 +1,69 @@
+version: "3.10"
+
+services:
+  directus:
+    image: directus/directus:11.2.2
+    restart: unless-stopped
+    env_file:
+      - .env.directus
+    ports:
+      - "8055:8055"
+    volumes:
+      # Uploads directory for file management
+      - directus_uploads:/directus/uploads
+      # Extensions directory for custom modules
+      - directus_extensions:/directus/extensions
+      # Database directory for SQLite (backup/cache only)
+      - directus_database:/directus/database
+    environment:
+      # Database Configuration (Connect to existing Jiran PostgreSQL)
+      DB_CLIENT: pg
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: jiran
+      DB_USER: jiran
+      DB_PASSWORD: jiran
+
+      # Redis Cache (Optional - connect to existing Redis)
+      CACHE_ENABLED: "true"
+      CACHE_STORE: redis
+      REDIS: redis://redis:6379/2
+
+      # Public URL (for Railway deployment, update this)
+      PUBLIC_URL: http://localhost:8055
+
+      # CORS Configuration
+      CORS_ENABLED: "true"
+      CORS_ORIGIN: "true"
+
+      # Rate Limiting
+      RATE_LIMITER_ENABLED: "true"
+      RATE_LIMITER_POINTS: 50
+      RATE_LIMITER_DURATION: 1
+
+      # File Storage (Local for development)
+      STORAGE_LOCATIONS: local
+      STORAGE_LOCAL_DRIVER: local
+      STORAGE_LOCAL_ROOT: /directus/uploads
+
+      # Email Configuration (loaded from .env.directus)
+      EMAIL_TRANSPORT: smtp
+
+      # Telemetry (Disable for privacy)
+      TELEMETRY: "false"
+
+      # Log Level
+      LOG_LEVEL: info
+
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - default
+
+volumes:
+  directus_uploads:
+  directus_extensions:
+  directus_database:
+
+# Use the default network created by docker-compose.yml

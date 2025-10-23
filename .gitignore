@@ -29,6 +29,12 @@ env/
 # Environment Variables
 .env
 .env.local
+.env.directus
+
+# Directus
+directus_uploads/
+directus_extensions/
+directus_database/
 
 # IDEs
 .vscode/
