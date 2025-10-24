@@ -43,12 +43,13 @@ async def fix_products_table(
                 "migrated": False
             }
 
-        # Drop and recreate table
-        migration_sql = text("""
-            -- Drop existing table
-            DROP TABLE IF EXISTS products CASCADE;
+        # Drop and recreate table - split into separate statements for asyncpg
 
-            -- Create enums if they don't exist
+        # Step 1: Drop existing table
+        await session.execute(text("DROP TABLE IF EXISTS products CASCADE"))
+
+        # Step 2: Create enums (use DO blocks for idempotency)
+        await session.execute(text("""
             DO $$ BEGIN
                 CREATE TYPE product_category AS ENUM (
                     'TRADING_CARDS', 'MENS_FASHION', 'SNEAKERS', 'SPORTS_CARDS',
@@ -56,19 +57,25 @@ async def fix_products_table(
                     'KIDS_BABY', 'FURNITURE', 'BOOKS', 'OTHER'
                 );
             EXCEPTION WHEN duplicate_object THEN NULL;
-            END $$;
+            END $$
+        """))
 
+        await session.execute(text("""
             DO $$ BEGIN
                 CREATE TYPE product_condition AS ENUM ('NEW', 'LIKE_NEW', 'GOOD', 'FAIR');
             EXCEPTION WHEN duplicate_object THEN NULL;
-            END $$;
+            END $$
+        """))
 
+        await session.execute(text("""
             DO $$ BEGIN
                 CREATE TYPE feed_type AS ENUM ('DISCOVER', 'COMMUNITY');
             EXCEPTION WHEN duplicate_object THEN NULL;
-            END $$;
+            END $$
+        """))
 
-            -- Create products table
+        # Step 3: Create products table
+        await session.execute(text("""
             CREATE TABLE products (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 seller_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -92,16 +99,16 @@ async def fix_products_table(
                 sold_at TIMESTAMP WITH TIME ZONE,
                 created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
                 updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
-            );
+            )
+        """))
 
-            -- Create indexes
-            CREATE INDEX ix_products_seller_id ON products(seller_id);
-            CREATE INDEX ix_products_category_feed ON products(category, feed_type);
-            CREATE INDEX ix_products_is_available ON products(is_available);
-            CREATE INDEX idx_products_location ON products USING GIST(location);
-        """)
+        # Step 4: Create indexes
+        await session.execute(text("CREATE INDEX ix_products_seller_id ON products(seller_id)"))
+        await session.execute(text("CREATE INDEX ix_products_category_feed ON products(category, feed_type)"))
+        await session.execute(text("CREATE INDEX ix_products_is_available ON products(is_available)"))
+        await session.execute(text("CREATE INDEX idx_products_location ON products USING GIST(location)"))
 
-        await session.execute(migration_sql)
+        # Commit all changes
         await session.commit()
 
         # Verify
