@@ -45,6 +45,9 @@ async def fix_products_table(
 
         # Drop and recreate table - split into separate statements for asyncpg
 
+        # Step 0: Ensure PostGIS extension is enabled
+        await session.execute(text("CREATE EXTENSION IF NOT EXISTS postgis"))
+
         # Step 1: Drop existing table
         await session.execute(text("DROP TABLE IF EXISTS products CASCADE"))
 
