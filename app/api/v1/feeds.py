@@ -99,8 +99,7 @@ def _convert_product_to_feed_response(
 @router.get("/discover")
 async def get_discover_feed(
     session: Annotated[AsyncSession, Depends(get_db)],
-    feed_cache: Annotated[FeedCacheService, Depends(get_feed_cache_service)],
-    current_user: Annotated[User | None, Depends(get_current_active_user)] = None,
+    current_user: User | None = None,  # Made optional without dependency
     page: int = Query(1, ge=1, description="Page number"),
     per_page: int = Query(20, ge=1, le=100, description="Items per page"),
     category: ProductCategory | None = Query(None, description="Filter by category"),
@@ -131,21 +130,7 @@ async def get_discover_feed(
     Returns:
         Paginated discover feed with items, pagination info
     """
-    # ========== Check Cache First ==========
-    category_str = category.value if category else None
-    cached_feed = await feed_cache.get_discover_feed(
-        page=page, per_page=per_page, category=category_str, sort=sort
-    )
-
-    if cached_feed:
-        # Cache hit - return immediately
-        return {
-            "success": True,
-            "data": cached_feed,
-            "cached": True,  # Debug flag
-        }
-
-    # ========== Cache Miss - Query Database ==========
+    # ========== Query Database (Cache disabled for now) ==========
 
     # Get user location
     requester_location = None
@@ -238,19 +223,9 @@ async def get_discover_feed(
         "has_more": (page * per_page) < total,
     }
 
-    # ========== Cache Response (5 min TTL) ==========
-    await feed_cache.set_discover_feed(
-        page=page,
-        per_page=per_page,
-        data=response_data,
-        category=category_str,
-        sort=sort,
-    )
-
     return {
         "success": True,
         "data": response_data,
-        "cached": False,  # Debug flag
     }
 
 
