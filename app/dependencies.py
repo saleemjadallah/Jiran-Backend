@@ -81,7 +81,8 @@ async def require_seller_role(
 async def require_admin_role(
     current_user: Annotated[User, Depends(get_current_active_user)],
 ) -> User:
-    if current_user.role != UserRole.ADMIN:
+    # Allow ADMIN or BOTH roles (BOTH includes admin permissions)
+    if current_user.role not in [UserRole.ADMIN, UserRole.BOTH]:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin permissions required")
     return current_user
 
