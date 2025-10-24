@@ -19,7 +19,9 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-config.set_main_option("sqlalchemy.url", settings.sync_database_url)
+# Use sync postgres URL for migrations (psycopg2)
+sync_url = settings.sync_database_url.replace("postgresql+asyncpg://", "postgresql://")
+config.set_main_option("sqlalchemy.url", sync_url)
 target_metadata = Base.metadata
 
 
@@ -83,7 +85,6 @@ async def run_migrations_online() -> None:
     await connectable.dispose()
 
 
-if context.is_offline_mode():
-    run_migrations_offline()
-else:
-    asyncio.run(run_migrations_online())
+# Always use offline mode for now (sync migrations)
+# TODO: Fix async migrations properly
+run_migrations_offline()
