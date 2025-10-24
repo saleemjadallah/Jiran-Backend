@@ -130,9 +130,13 @@ async def create_product(
             detail=f"Maximum of {MAX_PRODUCTS_PER_USER} products allowed per user",
         )
 
-    # Convert location to PostGIS Point
-    point = Point(product_data.location.longitude, product_data.location.latitude)
-    location_wkb = from_shape(point, srid=4326)
+    # Convert location to PostGIS Point (if provided)
+    location_wkb = None
+    neighborhood = None
+    if product_data.location:
+        point = Point(product_data.location.longitude, product_data.location.latitude)
+        location_wkb = from_shape(point, srid=4326)
+        neighborhood = product_data.location.neighborhood
 
     # Create product
     new_product = Product(
@@ -146,7 +150,7 @@ async def create_product(
         condition=product_data.condition,
         feed_type=product_data.feed_type,
         location=location_wkb,
-        neighborhood=product_data.location.neighborhood,
+        neighborhood=neighborhood,
         image_urls=product_data.image_urls,
         video_url=product_data.video_url,
         video_thumbnail_url=product_data.video_thumbnail_url,

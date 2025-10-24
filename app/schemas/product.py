@@ -53,7 +53,7 @@ class ProductCreate(ORMBaseModel):
     category: ProductCategory = Field(...)
     condition: ProductCondition = Field(default=ProductCondition.GOOD)
     feed_type: FeedType = Field(default=FeedType.COMMUNITY)
-    location: ProductLocation
+    location: ProductLocation | None = None  # Optional until Google Maps integration
     image_urls: list[str] = Field(default_factory=list)
     video_url: str | None = None
     video_thumbnail_url: str | None = None
