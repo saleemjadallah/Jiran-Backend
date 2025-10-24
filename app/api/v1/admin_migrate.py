@@ -45,9 +45,6 @@ async def fix_products_table(
 
         # Drop and recreate table - split into separate statements for asyncpg
 
-        # Step 0: Ensure PostGIS extension is enabled
-        await session.execute(text("CREATE EXTENSION IF NOT EXISTS postgis"))
-
         # Step 1: Drop existing table
         await session.execute(text("DROP TABLE IF EXISTS products CASCADE"))
 
@@ -77,7 +74,7 @@ async def fix_products_table(
             END $$
         """))
 
-        # Step 3: Create products table
+        # Step 3: Create products table (without PostGIS for now - use TEXT for location)
         await session.execute(text("""
             CREATE TABLE products (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -90,7 +87,7 @@ async def fix_products_table(
                 category product_category NOT NULL,
                 condition product_condition NOT NULL DEFAULT 'GOOD',
                 feed_type feed_type NOT NULL DEFAULT 'COMMUNITY',
-                location GEOMETRY(POINT, 4326),
+                location TEXT,
                 neighborhood VARCHAR(255),
                 is_available BOOLEAN NOT NULL DEFAULT TRUE,
                 view_count INTEGER NOT NULL DEFAULT 0,
@@ -105,11 +102,10 @@ async def fix_products_table(
             )
         """))
 
-        # Step 4: Create indexes
+        # Step 4: Create indexes (skip GIST index for location without PostGIS)
         await session.execute(text("CREATE INDEX ix_products_seller_id ON products(seller_id)"))
         await session.execute(text("CREATE INDEX ix_products_category_feed ON products(category, feed_type)"))
         await session.execute(text("CREATE INDEX ix_products_is_available ON products(is_available)"))
-        await session.execute(text("CREATE INDEX idx_products_location ON products USING GIST(location)"))
 
         # Commit all changes
         await session.commit()
