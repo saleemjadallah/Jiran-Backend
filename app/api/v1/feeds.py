@@ -166,22 +166,33 @@ async def get_discover_feed(
     if category:
         query = query.where(Product.category == category)
 
-    # Get live streams to show first
-    live_streams_query = (
-        select(Stream.id)
-        .where(Stream.status == StreamStatus.LIVE)
-        .where(Stream.id.in_(select(Product.id).where(Product.video_url.isnot(None))))
-    )
-    live_stream_result = await session.execute(live_streams_query)
-    live_stream_ids = [row[0] for row in live_stream_result.all()]
-
-    # Sort query
-    if sort == "live_first":
-        # LIVE streams first, then recorded videos by created_at DESC
-        query = query.order_by(
-            Product.id.in_(live_stream_ids).desc(),  # Live streams first
-            Product.created_at.desc(),
+    # Check for live streams (from Stream table)
+    # The feed should show BOTH:
+    # 1. Products from products table (recorded videos, photos)
+    # 2. Live streams from streams table (actual live broadcasts)
+    live_stream_ids = []
+    try:
+        live_streams_query = (
+            select(Stream.id)
+            .where(Stream.status == StreamStatus.LIVE)
         )
+        live_stream_result = await session.execute(live_streams_query)
+        live_stream_ids = [row[0] for row in live_stream_result.all()]
+    except Exception:
+        # Streams table doesn't exist yet or other error - skip live check
+        pass
+
+    # Sort query - prioritize live streams if any exist
+    if sort == "live_first":
+        if live_stream_ids:
+            # Show live streams first, then all other products by created_at
+            query = query.order_by(
+                Product.id.in_(live_stream_ids).desc(),  # Live streams first
+                Product.created_at.desc(),  # Then newest products
+            )
+        else:
+            # No live streams, show all products by created_at
+            query = query.order_by(Product.created_at.desc())
     elif sort == "recent":
         query = query.order_by(Product.created_at.desc())
     elif sort == "popular":
