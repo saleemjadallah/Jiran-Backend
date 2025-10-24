@@ -99,7 +99,6 @@ def _convert_product_to_feed_response(
 @router.get("/discover")
 async def get_discover_feed(
     session: Annotated[AsyncSession, Depends(get_db)],
-    current_user: User | None = None,  # Made optional without dependency
     page: int = Query(1, ge=1, description="Page number"),
     per_page: int = Query(20, ge=1, le=100, description="Items per page"),
     category: ProductCategory | None = Query(None, description="Filter by category"),
@@ -136,9 +135,6 @@ async def get_discover_feed(
     requester_location = None
     if latitude and longitude:
         requester_location = ProductLocation(latitude=latitude, longitude=longitude)
-    elif current_user and current_user.location:
-        user_point = to_shape(current_user.location)
-        requester_location = ProductLocation(latitude=user_point.y, longitude=user_point.x)
 
     # Build query for Discover feed
     query = (
