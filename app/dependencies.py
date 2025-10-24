@@ -1,5 +1,6 @@
 from collections.abc import AsyncIterator
 from typing import Annotated
+import logging
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -15,6 +16,8 @@ from app.models.user import User, UserRole
 from app.services.cache.feed_cache_service import FeedCacheService
 from app.utils.jwt import decode_access_token
 
+logger = logging.getLogger(__name__)
+
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 
@@ -27,35 +30,51 @@ async def get_current_user(
     token: Annotated[str, Depends(oauth2_scheme)],
     session: Annotated[AsyncSession, Depends(get_db)],
 ) -> User:
+    logger.info(f"🔑 [AUTH] Token received (first 40 chars): {token[:40]}...")
+
     try:
         payload = decode_access_token(token)
+        logger.info(f"✅ [AUTH] Token decoded successfully. User ID: {payload.get('sub')}, Exp: {payload.get('exp')}")
     except ValueError as exc:
+        logger.error(f"❌ [AUTH] Token decode FAILED: {exc}")
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials") from exc
 
     user_id = payload.get("sub")
     if not user_id:
+        logger.error("❌ [AUTH] No 'sub' field in token payload!")
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
 
+    logger.info(f"🔍 [AUTH] Looking up user in database: {user_id}")
     result = await session.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
+
     if not user:
+        logger.error(f"❌ [AUTH] User NOT FOUND in database: {user_id}")
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+
+    logger.info(f"✅ [AUTH] User authenticated: {user.email}, role={user.role}, active={user.is_active}")
     return user
 
 
 async def get_current_active_user(
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> User:
+    logger.info(f"🔐 [ACTIVE CHECK] Checking if user is active: {current_user.email}")
     if not current_user.is_active:
+        logger.error(f"❌ [ACTIVE CHECK] User is INACTIVE: {current_user.email}")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Inactive user")
+    logger.info(f"✅ [ACTIVE CHECK] User is active: {current_user.email}")
     return current_user
 
 
 async def require_seller_role(
     current_user: Annotated[User, Depends(get_current_active_user)],
 ) -> User:
+    logger.info(f"🛡️ [SELLER CHECK] Validating seller permissions for: {current_user.email}, role={current_user.role}")
     if current_user.role not in {UserRole.SELLER, UserRole.BOTH, UserRole.ADMIN}:
+        logger.error(f"❌ [SELLER CHECK] FORBIDDEN - User role '{current_user.role}' does not have seller permissions")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Seller permissions required")
+    logger.info(f"✅ [SELLER CHECK] Seller access granted for role: {current_user.role}")
     return current_user
 
 
