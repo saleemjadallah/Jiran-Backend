@@ -52,7 +52,8 @@ def run_migrations_offline() -> None:
     context.configure(
         url=url,
         target_metadata=target_metadata,
-        literal_binds=True,
+        literal_binds=False,  # Changed to False to avoid errors
+        dialect_opts={"param style": "named"},
         include_object=include_object,
     )
 
@@ -85,6 +86,26 @@ async def run_migrations_online() -> None:
     await connectable.dispose()
 
 
-# Always use offline mode for now (sync migrations)
-# TODO: Fix async migrations properly
-run_migrations_offline()
+if context.is_offline_mode():
+    run_migrations_offline()
+else:
+    # Use sync engine for migrations
+    from sqlalchemy import engine_from_config, pool
+
+    connectable = engine_from_config(
+        config.get_section(config.config_ini_section, {}),
+        prefix="sqlalchemy.",
+        poolclass=pool.NullPool,
+    )
+
+    with connectable.connect() as connection:
+        context.configure(
+            connection=connection,
+            target_metadata=target_metadata,
+            include_object=include_object,
+        )
+
+        with context.begin_transaction():
+            context.run_migrations()
+
+    connectable.dispose()
