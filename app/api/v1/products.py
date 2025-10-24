@@ -130,12 +130,13 @@ async def create_product(
             detail=f"Maximum of {MAX_PRODUCTS_PER_USER} products allowed per user",
         )
 
-    # Convert location to PostGIS Point (if provided)
-    location_wkb = None
+    # Location temporarily disabled (PostGIS not available)
+    # TODO: Re-enable when Google Maps API is integrated
+    location_str = None
     neighborhood = None
     if product_data.location:
-        point = Point(product_data.location.longitude, product_data.location.latitude)
-        location_wkb = from_shape(point, srid=4326)
+        # Store as WKT string for now
+        location_str = f"POINT({product_data.location.longitude} {product_data.location.latitude})"
         neighborhood = product_data.location.neighborhood
 
     # Create product
@@ -149,7 +150,7 @@ async def create_product(
         category=product_data.category,
         condition=product_data.condition,
         feed_type=product_data.feed_type,
-        location=location_wkb,
+        location=location_str,  # Store as WKT string, not PostGIS geometry
         neighborhood=neighborhood,
         image_urls=product_data.image_urls,
         video_url=product_data.video_url,

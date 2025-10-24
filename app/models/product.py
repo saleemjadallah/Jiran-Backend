@@ -114,8 +114,10 @@ class Product(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         nullable=False,
     )
 
-    # Location (PostGIS with automatic GIST index)
-    location: Mapped[str | None] = mapped_column(Geometry(geometry_type="POINT", srid=4326))
+    # Location (temporarily disabled - using String until Google Maps integration)
+    # TODO: Re-enable PostGIS when Google Maps API is integrated
+    # location: Mapped[str | None] = mapped_column(Geometry(geometry_type="POINT", srid=4326))
+    location: Mapped[str | None] = mapped_column(String(255))  # Temp: store as WKT string
     neighborhood: Mapped[str | None] = mapped_column(String(255))
 
     # Availability and status
