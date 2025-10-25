@@ -72,6 +72,8 @@ def _convert_product_to_feed_response(
         "category": product.category,
         "condition": product.condition,
         "feed_type": product.feed_type,
+        "listing_type": "recorded_video" if product.video_url else "photo_only",  # Infer from media
+        "seller_id": str(product.seller_id),  # Add seller_id
         "neighborhood": product.neighborhood,
         "is_available": product.is_available,
         "view_count": product.view_count,
